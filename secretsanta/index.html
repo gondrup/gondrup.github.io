@@ -14,15 +14,62 @@
         body {
             margin: 0;
             padding: 0;
+
+            font-family: Arial, "Helvetica Neue", Helvetica, sans-serif;
+            font-size: 12px;
+
+            background-color: #222 ;
+            color: #eee;
+        }
+
+        #wrapper {
+            background-color: #000;
+            width: 760px;
+            margin-left: auto;
+            margin-right: auto;
+            padding: 10px;
+        }
+
+        #help {
+            width: 760px;
+        }
+
+        h1 {
+            font-size: 14px;
+        }
+
+        h2 {
+            font-size: 12px;
+            margin-bottom: 3px;
+        }
+
+        table {
+            border-collapse: collapse;
+        }
+
+        th, td {
+            border: 1px solid #aaaaaa;
+            padding: 5px 10px;
         }
     </style>
 </head>
 
 <body>
-
-    <div id="content"></div>
-    <!-- uncomment the line bellow for cordova feature -->
-    <!-- <script type="text/javascript" src="cordova.js"></script> -->
+    <div id="wrapper">
+        <div id="content"></div>
+        <div id="help">
+            <h1>Secret Santa Challenge</h1>
+            <h2>Controls</h2>
+            <table>
+                <tr>
+                    <th>Space Bar</th>
+                    <td>Jump</td>
+                </tr>
+            </table>
+        </div>
+        <!-- uncomment the line bellow for cordova feature -->
+        <!-- <script type="text/javascript" src="cordova.js"></script> -->
+    </div>
 <script type="text/javascript" src="./dist/vendor.bundle.js"></script><script type="text/javascript" src="./dist/bundle.js"></script></body>
 
 </html>

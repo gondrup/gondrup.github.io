@@ -4234,7 +4234,7 @@ module.exports = Math.scale || function scale(x, inLow, inHigh, outLow, outHigh)
 /***/ (function(module, exports, __webpack_require__) {
 
 __webpack_require__(/*! babel-polyfill */129);
-module.exports = __webpack_require__(/*! /Volumes/Spinner/Adrian/Dev/Me/RedditGiftsGame/reddit-gifts-game/src/main.js */331);
+module.exports = __webpack_require__(/*! /home/adrian/me/reddit-gifts-game/src/main.js */331);
 
 
 /***/ }),
@@ -10786,9 +10786,9 @@ const centerGameObjects = objects => {
 
         // make the game occuppy all available space, but respecting
         // aspect ratio – with letterboxing if needed
-        /*this.game.scale.scaleMode = Phaser.ScaleManager.SHOW_ALL;
+        /*this.game.scale.scaleMode = Phaser.ScaleManager.SHOW_ALL;*/
         this.game.scale.pageAlignHorizontally = true;
-        this.game.scale.pageAlignVertically = true;*/
+        this.game.scale.pageAlignVertically = true;
 
         this.game.scale.fullScreenScaleMode = __WEBPACK_IMPORTED_MODULE_0_phaser___default.a.ScaleManager.EXACT_FIT;
 
