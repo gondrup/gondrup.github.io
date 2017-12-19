@@ -4234,7 +4234,7 @@ module.exports = Math.scale || function scale(x, inLow, inHigh, outLow, outHigh)
 /***/ (function(module, exports, __webpack_require__) {
 
 __webpack_require__(/*! babel-polyfill */129);
-module.exports = __webpack_require__(/*! /home/adrian/me/reddit-gifts-game/src/main.js */331);
+module.exports = __webpack_require__(/*! /Volumes/Spinner/Adrian/Dev/Me/RedditGiftsGame/reddit-gifts-game/src/main.js */331);
 
 
 /***/ }),
@@ -10823,17 +10823,19 @@ const centerGameObjects = objects => {
         this.game.add.existing(obstacle);
          this.obstacles.push(obstacle);*/
 
-        let shroom = this.obstacles.create(x, this.game.world.height - 32 - this.game.cache.getImage(assetKey).width, assetKey);
+        let shroom = this.obstacles.create(x, this.game.world.height - 32 - this.game.cache.getImage(assetKey).height, assetKey);
         shroom.body.immovable = true;
         // Make hit box smaller
         let hitBoxPadding = 5;
         shroom.body.setSize(this.game.cache.getImage(assetKey).width - hitBoxPadding * 2, this.game.cache.getImage(assetKey).height - hitBoxPadding * 2, hitBoxPadding, hitBoxPadding);
     }
 
-    addPlatform(x, y, widthScale) {
-        let ground = this.platforms.create(x, y, 'ground');
-        ground.scale.setTo(widthScale, 0.25);
-        ground.body.immovable = true;
+    addPlatform(x, y, width) {
+        let platform = this.platforms.create(x, y, 'ground');
+        //ground.scale.setTo(widthScale, 0.25);
+        platform.width = width;
+        platform.height = 12;
+        platform.body.immovable = true;
     }
 
     create() {
@@ -10848,18 +10850,26 @@ const centerGameObjects = objects => {
         ground.scale.setTo(10, 1);
         ground.body.immovable = true;
 
-        this.addPlatform(1180, this.game.world.height - 32 * 2, 0.025);
-        this.addPlatform(1260, this.game.world.height - 32 * 4, 0.025);
-        this.addPlatform(1340, this.game.world.height - 32 * 6, 0.025);
+        /*this.addPlatform(1180, this.game.world.height - (32 * 2), 0.025);
+        this.addPlatform(1260, this.game.world.height - (32 * 4), 0.025);
+        this.addPlatform(1340, this.game.world.height - (32 * 6), 0.025);*/
 
         this.obstacles = this.game.add.group();
         this.obstacles.enableBody = true;
 
-        this.addObstacle('mushroom04', 810);
-        this.addObstacle('mushroom05', 1010);
-        this.addObstacle('mushroom06', 1410);
-        this.addObstacle('mushroom04', 1710);
-        this.addObstacle('mushroom04', 1910);
+        this.addObstacle('mushroom04', 770);
+        this.addObstacle('mushroom04', 1149);
+        this.addObstacle('mushroom04', 1336);
+        this.addObstacle('mushroom04', 1529);
+
+        this.addObstacle('mushroom05', 1915);
+        this.addObstacle('mushroom05', 2145);
+        this.addObstacle('mushroom05', 2385);
+
+        this.addPlatform(2661, 310, 150);
+        this.addObstacle('mushroom06', 2830);
+        this.addPlatform(3199, 310, 75);
+        this.addObstacle('mushroom06', 3310);
 
         this.player = new __WEBPACK_IMPORTED_MODULE_1__sprites_Player__["a" /* default */]({
             game: this.game,
@@ -10994,6 +11004,7 @@ const centerGameObjects = objects => {
         this.body.bounce.y = 0;
         this.body.gravity.y = 1000;
         this.body.collideWorldBounds = true;
+        this.scale.setTo(0.9);
 
         //  Our two animations, walking left and right.
         this.animations.add('left', [0, 1, 2, 3], 10, true);
