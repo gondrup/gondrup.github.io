@@ -10796,7 +10796,9 @@ const centerGameObjects = objects => {
 
         this.game.world.resize(5000, this.game.height);
 
-        this.game.load.audio('bg-music', [ASSET_DIR + '/space.mp3']);
+        this.game.load.audio('bg-music', [ASSET_DIR + '/loading-loop-trimmed.mp3']);
+
+        this.game.load.audio('success', [ASSET_DIR + '/success.mp3']);
 
         this.game.load.image('sky', ASSET_DIR + '/milky_way_stars_night_sky_space_97654_800x600.jpg');
         this.game.load.spritesheet('dude', ASSET_DIR + '/dude-edit.png', 32, 48);
@@ -10909,8 +10911,8 @@ const centerGameObjects = objects => {
 
         //  - this.game.cache.getImage('mushroom1').height
 
-        //this.music = this.game.add.audio('bg-music');
-        //this.music.play();
+        this.music = this.game.add.audio('bg-music', 1, true);
+        this.music.play();
 
         this.ship = new __WEBPACK_IMPORTED_MODULE_3__sprites_Ship__["a" /* default */]({
             game: this.game,
@@ -10919,6 +10921,8 @@ const centerGameObjects = objects => {
             asset: 'ship'
         });
         this.game.add.existing(this.ship);
+
+        this.successSound = this.game.add.audio('success', 1, false);
     }
 
     update() {
@@ -10995,6 +10999,9 @@ const centerGameObjects = objects => {
     }
 
     gameComplete() {
+        this.music.stop();
+        this.successSound.play();
+
         //console.log("game complete");
 
         this.player.running = false;
