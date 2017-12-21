@@ -11128,11 +11128,11 @@ const centerGameObjects = objects => {
             }
         }, this);
 
-        this.bodyClickListener = document.addEventListener('mousedown', e => {
+        /*this.bodyClickListener = document.addEventListener('mousedown', (e) => {
             if (this.body.touching.down) {
                 this.jump();
             }
-        }, false);
+        }, false);*/
 
         this.running = true;
     }
