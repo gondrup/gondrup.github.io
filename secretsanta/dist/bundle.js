@@ -10926,8 +10926,8 @@ const centerGameObjects = objects => {
 
         this.player = new __WEBPACK_IMPORTED_MODULE_1__sprites_Player__["a" /* default */]({
             game: this.game,
-            x: this.game.width / 2 - this.game.cache.getImage('dude').width,
-            //x: 3660,
+            //x: this.game.width / 2 - this.game.cache.getImage('dude').width,
+            x: 3660,
             y: this.game.world.height / 2,
             asset: 'dude'
         });
@@ -11067,7 +11067,14 @@ const centerGameObjects = objects => {
 
         let text = this.game.add.text(this.game.camera.width / 2, this.game.camera.height / 100 * 10, 'CONGRATULATIONS!\nThe code is:    1 8 2 ', { font: '26px Bangers', fill: '#dddddd', align: 'center' });
         text.anchor.setTo(0.5, 0.5);
+
+        let text2 = this.game.add.text(this.game.camera.width - 5, 5, 'Press here to play again!', { font: '16px Bangers', fill: '#dddddd', align: 'center' });
+        text2.anchor.setTo(1, 0);
+
         text.fixedToCamera = true;
+        text2.fixedToCamera = true;
+
+        this.game.input.onTap.add(this.restart, this);
     }
 
     restart() {
