@@ -9,6 +9,7 @@
     <meta name="MobileOptimized" content="320">
     <meta http-equiv="cleartype" content="on">
     <meta name="format-detection" content="telephone=no">
+    <meta http-equiv="ScreenOrientation" content="autoRotate:disabled">
     <style>
         html,
         body {
@@ -24,14 +25,49 @@
 
         #wrapper {
             background-color: #000;
-            width: 760px;
+            max-width: 760px;
             margin-left: auto;
             margin-right: auto;
-            padding: 10px;
+            padding: 10px 0;
         }
 
         #help {
-            width: 760px;
+            max-width: 760px;
+            padding: 10px;
+        }
+
+        /* for all screens */
+        #rotate-message {
+            display: none;
+            position: fixed;
+
+            width: 100%;
+            height: 100%;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            z-index: 2;
+            background-color: rgba(0,0,0,0.5);
+        }
+
+        /* only when orientation is in portrait mode */
+        @media all and (orientation:landscape) {
+            #rotate-message {
+                display: block;
+            }
+        }
+
+        #rotate-message img {
+            display: block;
+            float: left;
+        }
+
+        #rotate-message .message {
+            display: block;
+            float: left;
+            padding: 20px;
+            max-width: 100px;
         }
 
         h1 {
@@ -51,6 +87,24 @@
             border: 1px solid #aaaaaa;
             padding: 5px 10px;
         }
+
+        #control-msg-space-bar {
+            display: inline;
+        }
+
+        #control-msg-tap {
+            display: none;
+        }
+
+        @media only screen and (max-width: 768px) {
+            #control-msg-space-bar {
+                display: none;
+            }
+
+            #control-msg-tap {
+                display: inline;
+            }
+        }
     </style>
 </head>
 
@@ -62,10 +116,19 @@
             <h2>Controls</h2>
             <table>
                 <tr>
-                    <th>Space Bar</th>
+                    <th>
+                        <span id="control-msg-space-bar">Space Bar</span>
+                        <span id="control-msg-tap">Tap Screen</span>
+                    </th>
                     <td>Jump</td>
                 </tr>
             </table>
+        </div>
+        <div id="rotate-message">
+            <img src="assets/images/rotate_phone_white.png">
+            <div class="message">
+                Please rotate your device into portrait orientation and refresh the page :)
+            </div>
         </div>
         <!-- uncomment the line bellow for cordova feature -->
         <!-- <script type="text/javascript" src="cordova.js"></script> -->

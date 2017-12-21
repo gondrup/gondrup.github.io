@@ -4234,7 +4234,7 @@ module.exports = Math.scale || function scale(x, inLow, inHigh, outLow, outHigh)
 /***/ (function(module, exports, __webpack_require__) {
 
 __webpack_require__(/*! babel-polyfill */129);
-module.exports = __webpack_require__(/*! /home/adrian/me/reddit-gifts-game/src/main.js */331);
+module.exports = __webpack_require__(/*! /Volumes/Spinner/Adrian/Dev/Me/RedditGiftsGame/reddit-gifts-game/src/main.js */331);
 
 
 /***/ }),
@@ -10747,7 +10747,7 @@ if (window.cordova) {
 
         //this.add.tileSprite(0, 0, 760, this.game.world.height, 'sky');
 
-        let text = this.add.text(this.game.world.centerX, this.game.world.centerY, 'Welcome Georg_Lie, your code is being held hostage on another planet.\n\nClick here to retrieve it.', { font: '26px Bangers', fill: '#dddddd', align: 'center' });
+        let text = this.add.text(this.game.world.centerX, this.game.world.centerY, 'Welcome Georg_Lie \nYour code is being \nheld hostage on another planet \n\nPress here to retrieve it ', { font: '26px Bangers', fill: '#dddddd', align: 'center' });
         text.anchor.setTo(0.5, 0.5);
 
         this.game.input.onDown.add(this.start, this);
@@ -11028,7 +11028,7 @@ const centerGameObjects = objects => {
         text2.anchor.setTo(0.5, 0.5);
         text2.fixedToCamera = true;*/
 
-        let text = this.game.add.text(this.game.camera.width / 2, this.game.camera.height / 2, 'Game Over!\n\n Click here to retry.', { font: '26px Bangers', fill: '#dddddd', align: 'center' });
+        let text = this.game.add.text(this.game.camera.width / 2, this.game.camera.height / 2, 'Game Over!\n\n Press here to retry.', { font: '26px Bangers', fill: '#dddddd', align: 'center' });
         text.anchor.setTo(0.5, 0.5);
         text.fixedToCamera = true;
 
@@ -11065,7 +11065,7 @@ const centerGameObjects = objects => {
         text2.anchor.setTo(0.5, 0.5);
         text2.fixedToCamera = true;*/
 
-        let text = this.game.add.text(this.game.camera.width / 2, this.game.camera.height / 100 * 10, 'CONGRATULATIONS!\nThe code is:    1 8 2', { font: '26px Bangers', fill: '#dddddd', align: 'center' });
+        let text = this.game.add.text(this.game.camera.width / 2, this.game.camera.height / 100 * 10, 'CONGRATULATIONS!\nThe code is:    1 8 2 ', { font: '26px Bangers', fill: '#dddddd', align: 'center' });
         text.anchor.setTo(0.5, 0.5);
         text.fixedToCamera = true;
     }
@@ -11120,6 +11120,12 @@ const centerGameObjects = objects => {
                 this.jump();
             }
         }, this);
+
+        this.bodyClickListener = document.addEventListener('mousedown', e => {
+            if (this.body.touching.down) {
+                this.jump();
+            }
+        }, false);
 
         this.running = true;
     }
