@@ -4234,7 +4234,7 @@ module.exports = Math.scale || function scale(x, inLow, inHigh, outLow, outHigh)
 /***/ (function(module, exports, __webpack_require__) {
 
 __webpack_require__(/*! babel-polyfill */129);
-module.exports = __webpack_require__(/*! /Volumes/Spinner/Adrian/Dev/Me/RedditGiftsGame/reddit-gifts-game/src/main.js */331);
+module.exports = __webpack_require__(/*! /home/adrian/me/reddit-gifts-game/src/main.js */331);
 
 
 /***/ }),
@@ -10672,12 +10672,14 @@ if (window.cordova) {
 
 /* harmony default export */ __webpack_exports__["a"] = (class extends __WEBPACK_IMPORTED_MODULE_0_phaser___default.a.State {
   init() {
-    this.stage.backgroundColor = '#EDEEC9';
+    this.stage.backgroundColor = '#000000';
     this.fontsReady = false;
     this.fontsLoaded = this.fontsLoaded.bind(this);
   }
 
   preload() {
+    const ASSET_DIR = 'assets';
+
     __WEBPACK_IMPORTED_MODULE_1_webfontloader___default.a.load({
       google: {
         families: ['Bangers']
@@ -10688,8 +10690,8 @@ if (window.cordova) {
     let text = this.add.text(this.world.centerX, this.world.centerY, 'loading fonts', { font: '16px Arial', fill: '#dddddd', align: 'center' });
     text.anchor.setTo(0.5, 0.5);
 
-    this.load.image('loaderBg', './assets/images/loader-bg.png');
-    this.load.image('loaderBar', './assets/images/loader-bar.png');
+    this.load.image('loaderBg', ASSET_DIR + '/images/loader-bg.png');
+    this.load.image('loaderBar', ASSET_DIR + '/assets/images/loader-bar.png');
   }
 
   render() {
@@ -10720,23 +10722,40 @@ if (window.cordova) {
 
 
 /* harmony default export */ __webpack_exports__["a"] = (class extends __WEBPACK_IMPORTED_MODULE_0_phaser___default.a.State {
-  init() {}
+    init() {}
 
-  preload() {
-    this.loaderBg = this.add.sprite(this.game.world.centerX, this.game.world.centerY, 'loaderBg');
-    this.loaderBar = this.add.sprite(this.game.world.centerX, this.game.world.centerY, 'loaderBar');
-    Object(__WEBPACK_IMPORTED_MODULE_1__utils__["a" /* centerGameObjects */])([this.loaderBg, this.loaderBar]);
+    preload() {
+        const ASSET_DIR = 'assets';
 
-    this.load.setPreloadSprite(this.loaderBar);
-    //
-    // load your assets
-    //
-    this.load.image('mushroom', 'assets/images/mushroom2.png');
-  }
+        this.loaderBg = this.add.sprite(this.game.world.centerX, this.game.world.centerY, 'loaderBg');
+        this.loaderBar = this.add.sprite(this.game.world.centerX, this.game.world.centerY, 'loaderBar');
+        Object(__WEBPACK_IMPORTED_MODULE_1__utils__["a" /* centerGameObjects */])([this.loaderBg, this.loaderBar]);
 
-  create() {
-    this.state.start('Game');
-  }
+        this.load.setPreloadSprite(this.loaderBar);
+        //
+        // load your assets
+        //
+        //this.load.image('mushroom', ASSET_DIR + '/images/mushroom2.png');
+        this.load.image('sky', ASSET_DIR + '/milky_way_stars_night_sky_space_97654_800x600.jpg');
+    }
+
+    create() {
+        this.loaderBg.destroy();
+        this.loaderBar.destroy();
+
+        this.game.stage.backgroundColor = "#000000";
+
+        //this.add.tileSprite(0, 0, 760, this.game.world.height, 'sky');
+
+        let text = this.add.text(this.game.world.centerX, this.game.world.centerY, 'Welcome Georg_Lie, your code is being held hostage on another planet.\n\nClick here to retrieve it.', { font: '26px Bangers', fill: '#dddddd', align: 'center' });
+        text.anchor.setTo(0.5, 0.5);
+
+        this.game.input.onDown.add(this.start, this);
+    }
+
+    start() {
+        this.state.start('Game');
+    }
 });
 
 /***/ }),
@@ -10800,7 +10819,7 @@ const centerGameObjects = objects => {
         this.game.load.audio('success', [ASSET_DIR + '/success.mp3']);
         this.game.load.audio('game-over', [ASSET_DIR + '/game-over.mp3']);
 
-        this.game.load.image('sky', ASSET_DIR + '/milky_way_stars_night_sky_space_97654_800x600.jpg');
+        this.game.load.image('sky', ASSET_DIR + '/tileable-classic-nebula-space-patterns-7-con.jpg');
         this.game.load.spritesheet('dude', ASSET_DIR + '/dude-edit.png', 32, 48);
 
         this.game.load.image('mushroom01', ASSET_DIR + '/plantshrooms/plantshrooms_01_10x11.png');
@@ -10849,6 +10868,7 @@ const centerGameObjects = objects => {
     create() {
         this.game.physics.startSystem(__WEBPACK_IMPORTED_MODULE_0_phaser___default.a.Physics.ARCADE);
 
+        this.game.stage.backgroundColor = "#000000";
         this.game.add.tileSprite(0, 0, 5000, this.game.world.height, 'sky');
 
         this.platforms = this.game.add.group();
@@ -11001,15 +11021,18 @@ const centerGameObjects = objects => {
         /*let text = this.game.add.text(this.game.world.centerX, this.game.world.centerX, "Game Over!", style);
         text.setShadow(3, 3, 'rgba(0,0,0,0.5)', 2);*/
 
-        let text = this.game.add.text(this.game.camera.width / 2, this.game.camera.height / 2 - 30, "Game Over", { font: "14px Arial", fill: "#ffffff", stroke: '#000000', strokeThickness: 3 });
+        /*let text = this.game.add.text(this.game.camera.width / 2, (this.game.camera.height / 2) - 30, "Game Over", {font: "14px Bangers", fill: "#ffffff", stroke: '#000000', strokeThickness: 3});
+        text.anchor.setTo(0.5, 0.5);
+        text.fixedToCamera = true;
+         let text2 = this.game.add.text(this.game.camera.width / 2, (this.game.camera.height / 2) + 30, "Retry?", {font: "12px Bangers", fill: "#ffffff", stroke: '#000000', strokeThickness: 3});
+        text2.anchor.setTo(0.5, 0.5);
+        text2.fixedToCamera = true;*/
+
+        let text = this.game.add.text(this.game.camera.width / 2, this.game.camera.height / 2, 'Game Over!\n\n Click here to retry.', { font: '26px Bangers', fill: '#dddddd', align: 'center' });
         text.anchor.setTo(0.5, 0.5);
         text.fixedToCamera = true;
 
-        let text2 = this.game.add.text(this.game.camera.width / 2, this.game.camera.height / 2 + 30, "Retry?", { font: "12px Arial", fill: "#ffffff", stroke: '#000000', strokeThickness: 3 });
-        text2.anchor.setTo(0.5, 0.5);
-        text2.fixedToCamera = true;
-
-        this.game.input.onDown.add(this.restart, this);
+        this.game.input.onTap.add(this.restart, this);
 
         //  We'll set the bounds to be from x0, y100 and be 800px wide by 100px high
         //text.setTextBounds(0, 100, 800, 100);
@@ -11025,23 +11048,26 @@ const centerGameObjects = objects => {
 
         this.player.running = false;
 
-        let text = this.game.add.text(this.game.camera.width / 2, this.game.camera.height / 2 - 150, "CONGRATULATIONS!", {
-            font: "14px Arial",
+        /*let text = this.game.add.text(this.game.camera.width / 2, (this.game.camera.height / 2) - 150, "CONGRATULATIONS!", {
+            font: "14px Bangers",
             fill: "#ffffff",
             stroke: '#000000',
             strokeThickness: 3
         });
         text.anchor.setTo(0.5, 0.5);
         text.fixedToCamera = true;
-
-        let text2 = this.game.add.text(this.game.camera.width / 2, this.game.camera.height / 2 + 30, "The code is:    1 8 2", {
-            font: "14px Arial",
+         let text2 = this.game.add.text(this.game.camera.width / 2, (this.game.camera.height / 2) + 30, "The code is:    1 8 2", {
+            font: "14px Bangers",
             fill: "#ffffff",
             stroke: '#000000',
             strokeThickness: 3
         });
         text2.anchor.setTo(0.5, 0.5);
-        text2.fixedToCamera = true;
+        text2.fixedToCamera = true;*/
+
+        let text = this.game.add.text(this.game.camera.width / 2, this.game.camera.height / 100 * 10, 'CONGRATULATIONS!\nThe code is:    1 8 2', { font: '26px Bangers', fill: '#dddddd', align: 'center' });
+        text.anchor.setTo(0.5, 0.5);
+        text.fixedToCamera = true;
     }
 
     restart() {
