@@ -10868,12 +10868,18 @@ const centerGameObjects = objects => {
         this.addObstacle('mushroom04', 1336);
         this.addObstacle('mushroom04', 1529);
 
-        this.addObstacle('mushroom05', 1915);
+        this.addPlatform(1766, 310, 150);
+        this.addObstacle('mushroom06', 1935);
+
+        //this.addObstacle('mushroom05', 1915);
         this.addObstacle('mushroom05', 2145);
         this.addObstacle('mushroom05', 2385);
 
-        this.addPlatform(2661, 310, 150);
-        this.addObstacle('mushroom06', 2830);
+        this.addPlatform(2657, 310, 40);
+        this.addPlatform(2757, 250, 40);
+        this.addPlatform(2867, 190, 40);
+        this.addObstacle('mushroom10', 2921);
+
         this.addPlatform(3199, 310, 75);
         this.addObstacle('mushroom06', 3310);
 
