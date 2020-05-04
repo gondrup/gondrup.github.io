@@ -1,0 +1,619 @@
+<!doctype html>
+<html>
+	<head>
+	  	<meta charset="utf-8">
+	 	<title>Adrian R&D</title>
+	 	<style>
+	 		* {
+	 			padding: 0;
+	 			margin: 0;
+	 		}
+	 	</style>
+	</head>
+  	<script src="https://cdnjs.cloudflare.com/ajax/libs/pixi.js/5.1.3/pixi.min.js"></script>
+	<body>
+		<script>
+			// Function taken from https://github.com/kittykatattack/learningPixi
+			function hitTestRectangle(r1, r2) {
+
+			  //Define the variables we'll need to calculate
+			  let hit, combinedHalfWidths, combinedHalfHeights, vx, vy;
+
+			  //hit will determine whether there's a collision
+			  hit = false;
+
+			  //Find the center points of each sprite
+			  r1.centerX = r1.x + r1.width / 2;
+			  r1.centerY = r1.y + r1.height / 2;
+			  r2.centerX = r2.x + r2.width / 2;
+			  r2.centerY = r2.y + r2.height / 2;
+
+			  //Find the half-widths and half-heights of each sprite
+			  r1.halfWidth = r1.width / 2;
+			  r1.halfHeight = r1.height / 2;
+			  r2.halfWidth = r2.width / 2;
+			  r2.halfHeight = r2.height / 2;
+
+			  //Calculate the distance vector between the sprites
+			  vx = r1.centerX - r2.centerX;
+			  vy = r1.centerY - r2.centerY;
+
+			  //Figure out the combined half-widths and half-heights
+			  combinedHalfWidths = r1.halfWidth + r2.halfWidth;
+			  combinedHalfHeights = r1.halfHeight + r2.halfHeight;
+
+			  //Check for a collision on the x axis
+			  if (Math.abs(vx) < combinedHalfWidths) {
+
+			    //A collision might be occurring. Check for a collision on the y axis
+			    if (Math.abs(vy) < combinedHalfHeights) {
+
+			      //There's definitely a collision happening
+			      hit = true;
+			    } else {
+
+			      //There's no collision on the y axis
+			      hit = false;
+			    }
+			  } else {
+
+			    //There's no collision on the x axis
+			    hit = false;
+			  }
+
+			  //`hit` will be either `true` or `false`
+			  return hit;
+			};
+
+			// Function taken from https://github.com/kittykatattack/learningPixi
+			function keyboard(value) {
+			  let key = {};
+			  key.value = value;
+			  key.isDown = false;
+			  key.isUp = true;
+			  key.press = undefined;
+			  key.release = undefined;
+			  //The `downHandler`
+			  key.downHandler = event => {
+			    if (event.key === key.value) {
+			      if (key.isUp && key.press) key.press();
+			      key.isDown = true;
+			      key.isUp = false;
+			      event.preventDefault();
+			    }
+			  };
+
+			  //The `upHandler`
+			  key.upHandler = event => {
+			    if (event.key === key.value) {
+			      if (key.isDown && key.release) key.release();
+			      key.isDown = false;
+			      key.isUp = true;
+			      event.preventDefault();
+			    }
+			  };
+
+			  //Attach event listeners
+			  const downListener = key.downHandler.bind(key);
+			  const upListener = key.upHandler.bind(key);
+			  
+			  window.addEventListener(
+			    "keydown", downListener, false
+			  );
+			  window.addEventListener(
+			    "keyup", upListener, false
+			  );
+			  
+			  // Detach event listeners
+			  key.unsubscribe = () => {
+			    window.removeEventListener("keydown", downListener);
+			    window.removeEventListener("keyup", upListener);
+			  };
+			  
+			  return key;
+			}
+
+			const player_image_src = 'cat_head.png';
+			const enemy_image_src = 'meat_ball.png';
+			const bullet_image_src = 'plasma_ball.png';
+
+			let texture_sheet, animation_sheet, supernova_sheet;
+
+			// Classes
+
+			class Point {
+			}
+
+			class Bullet {
+				constructor(app, player, width, height, target_point) {
+					this.app = app;
+					this.player = player;
+					this.initial_width = width;
+					this.initial_height = height;
+					this.target_point = target_point;
+					this.speed = 10;
+					this.alive = true;
+
+					this.setup_sprite();
+				}
+
+				setup_sprite() {
+					this.sprite = new PIXI.Sprite(texture_sheet.textures[bullet_image_src]);
+					this.sprite.width = this.initial_width;
+					this.sprite.height = this.initial_height;
+
+					let start = new Point();
+					start.x = this.player.sprite.x + (this.player.sprite.width / 2) - (this.sprite.width / 2);
+					start.y = this.player.sprite.y + (this.player.sprite.height / 2) - (this.sprite.height / 2);
+
+					let direction = new Point();
+					direction.x = this.target_point.x - player.sprite.x;
+					direction.y = this.target_point.y - player.sprite.y;
+
+					// Normalize
+					let length = Math.sqrt(direction.x * direction.x + direction.y * direction.y);
+					direction.x /= length;
+					direction.y /= length;
+
+					this.direction = direction;
+
+					this.sprite.x = start.x;
+					this.sprite.y = start.y;
+
+					this.app.stage.addChild(this.sprite);
+
+					//this.game_loop();
+					this.app.ticker.add(delta => this.game_loop(delta));
+				}
+
+				game_loop(delta) {
+					if (!this.alive) {
+						return;
+					}
+
+					if (this.sprite.x - this.sprite.width / 2 > this.app.view.width) {
+						this.app.stage.removeChild(this.sprite);
+						return;
+					}
+
+					if (this.sprite.x + this.sprite.width / 2 < 0) {
+						this.app.stage.removeChild(this.sprite);
+						return;
+					}
+
+					if (this.sprite.y - this.sprite.height / 2 > this.app.view.height) {
+						this.app.stage.removeChild(this.sprite);
+						return;
+					}
+
+					if (this.sprite.y + this.sprite.height / 2 < 0) {
+						this.app.stage.removeChild(this.sprite);
+						return;
+					}
+
+					//requestAnimationFrame(this.game_loop.bind(this));
+
+					this.sprite.x += this.direction.x * this.speed;
+					this.sprite.y += this.direction.y * this.speed;
+
+					enemy_objects.forEach(enemy => {
+						if (hitTestRectangle(this.sprite, enemy.sprite) && enemy.alive) {
+							enemy.kill();
+							this.kill();
+						}
+					});
+				}
+
+				kill() {
+					this.alive = false;
+					this.app.stage.removeChild(this.sprite);
+				}
+			}
+
+			class HUD {
+				constructor(app, initial_lives, initial_score) {
+					this.app = app;
+					this.lives = initial_lives;
+					this.score = initial_score;
+
+					this.setup_sprite();
+				}
+
+				get_text() {
+					return `Score: ${this.score} Lives: ${this.lives}`;
+				}
+
+				setup_sprite() {
+					const style = new PIXI.TextStyle({
+					    fill: "white",
+					    fontFamily: "\"Trebuchet MS\", Helvetica, sans-serif",
+					    fontWeight: "bold",
+					    stroke: "silver"
+					});
+					this.sprite = new PIXI.Text(this.get_text(), style);
+					this.sprite.x = 0;
+					this.sprite.y = 0;
+
+					this.app.stage.addChild(this.sprite);
+				}
+
+				update(lives, score) {
+					this.lives = lives;
+					this.score = score;
+
+					this.sprite.text = this.get_text();
+				}
+			}
+
+			class Player {
+				constructor(app, hud, width, height, image_src) {
+					this.app = app;
+					this.hud = hud;
+					this.initial_width = width;
+					this.initial_height = height;
+					this.image_src = image_src;
+					this.moving = {
+						up: false,
+						down: false,
+						left: false,
+						right: false
+					};
+
+					this.lives = 9;
+					this.score = 0;
+					this.alive = true;
+
+					this.setup_sprite();
+					this.setup_interaction();
+					this.app.ticker.add(delta => this.game_loop(delta));
+				}
+
+				setup_sprite() {
+					this.sprite = new PIXI.Sprite(texture_sheet.textures[player_image_src]);
+					this.sprite.width = this.initial_width;
+					this.sprite.height = this.initial_height;
+					this.sprite.x = (this.app.view.width / 2) - (this.sprite.width / 2);
+					this.sprite.vx = 0;
+					this.sprite.y = (this.app.view.height / 2) - (this.sprite.height / 2);
+					this.sprite.vy = 0;
+
+					this.app.stage.addChild(this.sprite);
+				}
+
+				setup_interaction() {
+					// 1. Set up mouse listener
+					this.handleMouseDown = this.app.view.addEventListener('mousedown', this.fire.bind(this));
+        			this.handleTouchBegin = this.app.view.addEventListener('touchbegin', this.fire.bind(this));
+
+					// 2. Move with keys
+					this.keys = {
+						left: keyboard('ArrowLeft'),
+				    	up: keyboard('ArrowUp'),
+				      	right: keyboard('ArrowRight'),
+				      	down: keyboard('ArrowDown'),
+				      	w: keyboard('w'),
+				    	a: keyboard('a'),
+				      	s: keyboard('s'),
+				      	d: keyboard('d')
+				    };
+
+				    let bindMoveUp = key => {
+						key.press = () => {
+							if (this.moving.down) {
+								this.sprite.vy = 0;
+							} else {
+								this.sprite.vy = -5;
+							}
+
+							this.moving.up = true;
+						};
+						key.release = () => {
+							if (this.moving.down) {
+								this.sprite.vy = 5;
+							} else {
+								this.sprite.vy = 0;
+							}
+							this.moving.up = false;
+						};
+					}
+
+					bindMoveUp(this.keys.up);
+					bindMoveUp(this.keys.w);
+
+					let bindMoveDown = key => {
+						key.press = () => {
+							if (this.moving.up) {
+								this.sprite.vy = 0;
+							} else {
+								this.sprite.vy = 5;
+							}
+							this.moving.down = true;
+						};
+						key.release = () => {
+							if (this.moving.up) {
+								this.sprite.vy = -5;
+							} else {
+								this.sprite.vy = 0;
+							}
+							this.moving.down = false;
+						};
+					}
+
+					bindMoveDown(this.keys.down);
+					bindMoveDown(this.keys.s);
+
+					let bindMoveLeft = key => {
+						key.press = () => {
+							if (this.moving.right) {
+								this.sprite.vx = 0;
+							} else {
+								this.sprite.vx = -5;
+							}
+
+							this.moving.left = true;
+						};
+						key.release = () => {
+							if (this.moving.right) {
+								this.sprite.vx = 5;
+							} else {
+								this.sprite.vx = 0;
+							}
+							this.moving.left = false;
+						};
+					}
+
+					bindMoveLeft(this.keys.left);
+					bindMoveLeft(this.keys.a);
+
+					let bindMoveRight = key => {
+						key.press = () => {
+							if (this.moving.left) {
+								this.sprite.vx = 0;
+							} else {
+								this.sprite.vx = 5;
+							}
+
+							this.moving.right = true;
+						};
+						key.release = () => {
+							if (this.moving.left) {
+								this.sprite.vx = -5;
+							} else {
+								this.sprite.vx = 0;
+							}
+							this.moving.right = false;
+						};
+					}
+
+					bindMoveRight(this.keys.right);
+					bindMoveRight(this.keys.d);
+				}
+
+				fire(e) {
+					if (this.alive) {
+						let target_point = new Point();
+						target_point.x = e.clientX;
+						target_point.y = e.clientY;
+
+						let bullet = new Bullet(this.app, this, Math.floor(this.app.view.width * 0.03),  Math.floor(this.app.view.width * 0.03), target_point);
+					}
+				}
+
+				game_loop(delta) {
+					if (this.sprite.x + this.sprite.width >= this.app.view.width && this.sprite.vx > 0) {
+						this.sprite.vx = 0;
+					} else if (this.sprite.x <= 1 && this.sprite.vx < 0) {
+						this.sprite.vx = 0;
+					}
+
+					if (this.sprite.y + this.sprite.height >= this.app.view.height && this.sprite.vy > 0) {
+						this.sprite.vy = 0;
+					} else if (this.sprite.y <= 1 && this.sprite.vy < 0) {
+						this.sprite.vy = 0;
+					}
+
+					this.sprite.x += this.sprite.vx;
+					this.sprite.y += this.sprite.vy;
+				}
+
+				add_to_score(score_to_add) {
+					this.score += score_to_add;
+					this.hud.update(this.lives, this.score);
+				}
+
+				hit() {
+					if (this.alive) {
+						this.lives -= 1;
+						this.hud.update(this.lives, this.score);
+
+						if (this.lives < 1) {
+							this.kill();
+						}
+					}
+				}
+
+				kill() {
+					this.alive = false;
+
+					for (var index in this.keys) {
+						this.keys[index].press = null;
+						this.keys[index].release = null;
+					};
+
+					this.sprite.vy = this.sprite.vx = 0;
+
+					// play death animation
+
+					this.app.stage.removeChild(this.sprite);
+
+					const explosionSprite = new PIXI.AnimatedSprite(supernova_sheet.animations['explosion']);
+					explosionSprite.loop = false;
+					explosionSprite.animationSpeed = 0.5;
+					explosionSprite.x = this.sprite.x - (explosionSprite.width / 2);
+					explosionSprite.y = this.sprite.y - (explosionSprite.height / 2);
+
+					explosionSprite.onComplete = () => {
+						delete this;
+						this.app.stage.removeChild(explosionSprite);
+					};
+					this.app.stage.addChild(explosionSprite);
+					explosionSprite.play();
+				}
+			};
+
+			class Enemy {
+				constructor(app, container, player, width, height, image_src) {
+					this.app = app;
+					this.container = container;
+					this.player = player;
+					this.initial_width = width;
+					this.initial_height = height;
+					this.image_src = image_src;
+					this.alive = true;
+
+					this.setup_sprite();
+					this.app.ticker.add(delta => this.game_loop(delta));
+				}
+
+				setup_sprite() {
+	  				this.sprite = new PIXI.Sprite(texture_sheet.textures[this.image_src]);
+					this.sprite.width = this.initial_width;
+					this.sprite.height = this.initial_height;
+
+					const sides = ['t', 'r', 'b', 'l'];
+					const initial_side = sides[Math.floor(Math.random() * sides.length)];
+
+					switch(initial_side) {
+						case 't':
+							this.sprite.x = Math.floor(Math.random() * (this.app.stage.width - this.sprite.width));
+							this.sprite.vx = 10;
+							this.sprite.y = -this.sprite.height;
+							this.sprite.vy = 10;
+							break;
+						case 'r':
+							this.sprite.x = this.app.stage.width + this.sprite.width;
+							this.sprite.vx = -10;
+							this.sprite.y = Math.floor(Math.random() * (this.app.stage.height - this.sprite.height));
+							this.sprite.vy = -10;
+							break;
+						case 'b':
+							this.sprite.x = Math.floor(Math.random() * (this.app.stage.width - this.sprite.width));
+							this.sprite.vx = -10;
+							this.sprite.y = this.app.view.height + this.sprite.height;
+							this.sprite.vy = -10;
+							break;
+						case 'l':
+							this.sprite.x = -this.sprite.width;
+							this.sprite.vx = 10;
+							this.sprite.y = Math.floor(Math.random() * (this.app.stage.height - this.sprite.height));
+							this.sprite.vy = 10;
+							break;
+					}
+
+					this.container.addChild(this.sprite);
+				}
+
+				game_loop(delta) {
+					if (!this.alive) {
+						return;
+					}
+
+					if (this.sprite.x + this.sprite.width >= this.app.view.width && this.sprite.vx > 0) {
+						this.sprite.vx = -(Math.floor(Math.random() * 10) + 1);
+					} else if (this.sprite.x <= 1 && this.sprite.vx < 0) {
+						this.sprite.vx = Math.floor(Math.random() * 10) + 1;
+					}
+
+					if (this.sprite.y + this.sprite.height >= this.app.view.height && this.sprite.vy > 0) {
+						this.sprite.vy = -(Math.floor(Math.random() * 10) + 1);
+					} else if (this.sprite.y <= 1 && this.sprite.vy < 0) {
+						this.sprite.vy = Math.floor(Math.random() * 10) + 1;
+					}
+					
+					this.sprite.x += this.sprite.vx;
+					this.sprite.y += this.sprite.vy;
+
+					if (hitTestRectangle(this.sprite, this.player.sprite) && this.alive) {
+						player.hit();
+						this.kill();
+					}
+				}
+
+				kill() {
+					this.player.add_to_score(1000);
+					this.alive = false;
+					this.container.removeChild(this.sprite);
+
+					const explosionSprite = new PIXI.AnimatedSprite(animation_sheet.animations['explosion']);
+					explosionSprite.loop = false;
+					explosionSprite.animationSpeed = 0.5;
+					explosionSprite.x = this.sprite.x - (explosionSprite.width / 2);
+					explosionSprite.y = this.sprite.y - (explosionSprite.height / 2);
+
+					explosionSprite.onComplete = () => {
+						const index = enemy_objects.indexOf(this);
+						if (index > -1) enemy_objects.splice(index, 1);
+						delete this;
+						app.stage.removeChild(explosionSprite);
+					};
+					app.stage.addChild(explosionSprite);
+					explosionSprite.play();
+				}
+			};
+
+			// Boilerplate
+
+			let type = 'WebGL';
+			if (!PIXI.utils.isWebGLSupported()){
+		      	type = 'canvas';
+		    }
+
+			let app = new PIXI.Application({width: 256, height: 256, antialias: true});
+			document.body.appendChild(app.view);
+
+			app.renderer.view.style.position = 'absolute';
+			app.renderer.view.style.display = 'block';
+			app.renderer.autoResize = true;
+			app.renderer.resize(window.innerWidth, window.innerHeight);
+
+			PIXI.Loader.shared
+				.add('main', 'sprites/spritesheet.json')
+				.add('explosion_frames', 'sprites/explosion_frames/spritesheet.json')
+				.add('supernova_frames', 'sprites/supernova_frames/spritesheet.json')
+				.load(start_game);
+
+			let hud, player, enemies_per_second = 0.5, enemy_limit = 10, enemies, enemy_objects = [];
+
+			function start_game() {
+				texture_sheet = PIXI.Loader.shared.resources.main.spritesheet;
+			  	animation_sheet = PIXI.Loader.shared.resources.explosion_frames.spritesheet;
+			  	supernova_sheet = PIXI.Loader.shared.resources.supernova_frames.spritesheet;
+
+			  	hud = new HUD(app, 9, 0);
+				player = new Player(app, hud, Math.floor(window.innerWidth * 0.07),  Math.floor(window.innerWidth * 0.07), player_image_src);
+				enemies = new PIXI.Container();
+				enemy_objects = [];
+				enemies.width = app.view.width;
+				enemies.height = app.view.height;
+				app.stage.addChild(enemies);
+
+				setInterval(enemy_generator_loop, 1000);
+				/*setInterval(() => {
+					enemies_per_second += 0.1;
+					enemy_limit += 1;
+				}, 5000);*/
+			}
+
+			function enemy_generator_loop() {
+				if (enemies.children.length < enemy_limit) {
+					let should_generate = (Math.floor(Math.random() + enemies_per_second)) >= 1;
+
+					if (should_generate) {
+						let enemy = new Enemy(app, enemies, player, Math.floor(window.innerWidth * 0.06),  Math.floor(window.innerWidth * 0.06), enemy_image_src);
+						enemy_objects.push(enemy);
+					}
+				}
+			}
+	  	</script>
+	</body>
+</html>

@@ -1,0 +1,33 @@
+{
+	"meta": {
+		"image": "spritesheet.png",
+		"size": {"w":3226,"h":2048},
+		"scale": "1"
+	},
+	"frames": {
+		"cat_head.png":
+		{
+			"frame": {"x":0,"y":0,"w":2048,"h":2048},
+			"rotated": false,
+			"trimmed": false,
+			"spriteSourceSize": {"x":0,"y":0,"w":2048,"h":2048},
+			"sourceSize": {"w":2048,"h":2048}
+		},
+		"meat_ball.png":
+		{
+			"frame": {"x":2048,"y":0,"w":1178,"h":942},
+			"rotated": false,
+			"trimmed": false,
+			"spriteSourceSize": {"x":0,"y":0,"w":1178,"h":942},
+			"sourceSize": {"w":1178,"h":942}
+		},
+		"plasma_ball.png":
+		{
+			"frame": {"x":2048,"y":942,"w":256,"h":256},
+			"rotated": false,
+			"trimmed": false,
+			"spriteSourceSize": {"x":0,"y":0,"w":256,"h":256},
+			"sourceSize": {"w":256,"h":256}
+		}
+	}
+}
