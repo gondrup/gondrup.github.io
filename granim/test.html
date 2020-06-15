@@ -1,0 +1,92 @@
+<canvas id="canvas"></canvas>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/granim/2.0.0/granim.js"></script>
+<style>
+	#canvas {
+	    position: absolute;
+	    display: block;
+	    width: 100%;
+	    height: 100%;
+	    top: 0;
+	    right: 0;
+	    bottom: 0;
+	    left: 0;
+	}
+</style>
+<script>
+	var roundDown = function (num, precision) {
+		num = parseFloat(num);
+		if (!precision) return num.toLocaleString();
+		return (Math.floor(num / precision) * precision);
+	};
+
+	var getGradient = function (pixelX, containerWidth) {
+		var spaceBefore = 100;
+		var spaceAfter = 100;
+
+		var gradient = [];
+
+		if ((pixelX - spaceBefore) > 0) {
+			gradient.push({ color: '#ff0000', pos: 0 });
+			gradient.push({ color: '#ff0000', pos: (pixelX-spaceBefore)/containerWidth });
+		} else {
+			gradient.push({ color: '#00ff00', pos: 0 });
+			gradient.push({ color: '#00ff00', pos: 0 });
+		}
+
+		gradient.push({ color: '#00ff00', pos: pixelX/containerWidth });
+
+		if ((pixelX + spaceAfter) < containerWidth) {
+			gradient.push({ color: '#0000ff', pos: (pixelX+spaceAfter)/containerWidth });
+			gradient.push({ color: '#0000ff', pos: 1 });
+		} else {
+			gradient.push({ color: '#00ff00', pos: 1 });
+			gradient.push({ color: '#00ff00', pos: 1 });
+		}
+
+		return gradient;
+	}
+
+	var canvas = document.getElementById('canvas');
+
+	var states = {
+		'default-state': {
+			gradients: [
+				getGradient(0, canvas.scrollWidth)
+            ]
+		}
+	};
+	for (var i = 0; i < canvas.scrollWidth; i+=10) {
+		states['left-' + i] = {
+			gradients: [
+				getGradient(i, canvas.scrollWidth)
+            ]
+		}
+	}
+
+	console.log(states);
+
+	var granimInstance = new Granim({
+	    element: '#canvas',
+	    direction: 'left-right',
+	    isPausedWhenNotInView: true,
+	    states: states
+	});
+
+	var timeout;
+
+	canvas.addEventListener('mousemove', e => {
+		clearTimeout(timeout);
+
+		timeout = setTimeout(() => {
+			var stateName = 'left-'+roundDown(e.offsetX, 10);
+			console.log('setting state to ' + stateName);
+			console.log(states[stateName]);
+			console.log(granimInstance);
+
+			granimInstance.changeState(stateName);
+		}, 100);
+		
+	});
+
+	
+</script>
