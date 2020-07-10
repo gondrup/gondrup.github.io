@@ -1,0 +1,63 @@
+<html>
+	<head>
+		<title>Single Div Picture - Apple Speaker</title>
+		<style>
+			body {
+				background: #000;
+			}
+
+			div {
+				width: 600px;
+				height: 200px;
+				box-shadow: 0 0 0 5px #fffefa;
+				border-radius: 10px;
+				position: absolute;
+				top: 50%;
+				left: 50%;
+				transform: translate(-50%, -50%);
+				background-color: #212121;
+    			background-image:
+    				radial-gradient(circle at 50% 50%, #6e777c 0%, #151515 100%);
+    				
+			}
+
+			div::after {
+				content: '';
+				position: absolute;
+				left: 0;
+				top: 0;
+				width: 600px;
+				height: 200px;
+				background-image:
+					/* Left speaker */
+					radial-gradient(circle at 20% 50%, #a8b0b3 0%, #3a3c3b 1%, #161719 2%, transparent 2%),
+    				radial-gradient(circle at 20% 50%, transparent 0%, transparent 2%, #737c83 2%, #3a4348 6%, #131416 7%, transparent 7%),
+    				radial-gradient(circle at 20% 50%, #697476 8%, #697476 8%, transparent 8%),
+
+					/* Middle speaker */
+					radial-gradient(circle at 50% 50%, #a8b0b3 0%, #3a3c3b 5%, #161719 6%, transparent 6%),
+					radial-gradient(circle at 50% 50%, #697476 6%, #697476 7%, transparent 7%),
+    				radial-gradient(circle at 50% 50%, transparent 0%, transparent 7%, #737c83 6%, #3a4348 16%, #131416 22%, transparent 22%),
+    				radial-gradient(circle at 50% 50%, #697476 22%, #697476 24%, transparent 24%),
+
+    				/* Right speaker */
+					radial-gradient(circle at 80% 50%, #a8b0b3 0%, #3a3c3b 1%, #161719 2%, transparent 2%),
+    				radial-gradient(circle at 80% 50%, transparent 0%, transparent 2%, #737c83 2%, #3a4348 6%, #131416 7%, transparent 7%),
+    				radial-gradient(circle at 80% 50%, #697476 8%, #697476 8%, transparent 8%),
+    				
+    				/* Small holes */
+    				radial-gradient(circle at 20px 20px, #000000 0%, #000000 1%, transparent 1%),
+    				radial-gradient(circle at 580px 20px, #000000 0%, #000000 1%, transparent 1%),
+    				radial-gradient(circle at 20px 180px, #000000 0%, #000000 1%, transparent 1%),
+    				radial-gradient(circle at 580px 180px, #000000 0%, #000000 1%, transparent 1%),
+
+    				/* Big holes */
+    				radial-gradient(circle at 190px 170px, #000000 0%, #161719 3%, transparent 3%),
+    				radial-gradient(circle at 410px 170px, #000000 0%, #161719 3%, transparent 3%);
+			}
+		</style>
+	</head>
+	<body>
+		<div></div>
+	</body>
+</html>
