@@ -1,0 +1,102 @@
+<html>
+	<head>
+	    <style>
+	    	body {
+				background-color: #000;
+	    	}
+
+	    	#container {
+	    		background-color: #002b54;
+	    		height: 800px;
+	    		width: 1200px;
+	    	}
+
+			#witch {
+				position: absolute;
+				width: 200px;
+				height: 200px;
+			}
+	    </style>
+	</head>
+	<body>
+		<div id="container">
+			<img src="img/witch.png" id="witch" />
+		</div>
+		<script src="js/choreographer.min.js"></script>
+		<script>
+			const from_angle = 0;
+			const to_angle = 360;
+			const from_radius = 250;
+			const to_radius = 50;
+			const origin_x = 200;
+			const origin_y = 200;
+
+			const degreesToRadians = (angleInDegrees) => (Math.PI * angleInDegrees) / 180;
+
+			const polarToCartesian = (angle, radius) => ({
+				x: radius * Math.cos(degreesToRadians(angle)),
+				y: radius * Math.sin(degreesToRadians(angle))
+			});
+
+			var choreographer = new Choreographer({
+				customFunctions: {
+					'witchFly': (data) => {
+						if (data.progress > 0 && data.progress < 1) {
+							const forward_progress = Math.ceil((data.progress * (data.to - data.from)) + data.from);
+							const angle = (to_angle - from_angle) * data.progress + from_angle;
+							const radius = ((from_radius - to_radius) * (1-data.progress)) + to_radius;
+
+							const coords = polarToCartesian(angle, radius);
+
+							console.log(`forward_progress: ${forward_progress.toString().padEnd(5)} angle: ${Math.ceil(angle).toString().padEnd(4)} radius: ${Math.ceil(radius).toString().padEnd(4)}`);
+						
+							data.node.style['left'] = origin_x + coords.x + forward_progress + data.unit;
+							data.node.style['top'] = origin_y + coords.y + data.unit;
+						}
+					}
+				},
+				animations: [
+				    {
+				        range: [-1, window.innerWidth],
+				        selector: '#witch',
+				        type: 'scale',
+				        style: 'transform:scaleX',
+				        from: 3,
+				        to: 0.5,
+				        unit: ''
+				    },
+				    {
+				        range: [-1, window.innerWidth],
+				        selector: '#witch',
+				        type: 'scale',
+				        style: 'transform:scaleY',
+				        from: 3,
+				        to: 0.5,
+				        unit: ''
+				    },
+				    {
+				        range: [-1, window.innerWidth],
+				        selector: '#witch',
+				        type: 'scale',
+				        style: 'opacity',
+				        from: 1,
+				        to: 0.2,
+				        unit: ''
+				    },
+					{
+						range: [-1, window.innerWidth],
+						selector: '#witch',
+						type: 'witchFly',
+						unit: 'px',
+						from: 0,
+						to: 800
+					},
+				]
+			})
+
+			window.addEventListener('mousemove', function(e) {
+				choreographer.runAnimationsAt(e.clientX)
+			})
+		</script>
+	</body>
+</html>
