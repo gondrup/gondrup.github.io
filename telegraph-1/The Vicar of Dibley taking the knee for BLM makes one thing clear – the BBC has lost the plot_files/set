@@ -1,0 +1,1 @@
+_cc12639.setConsentCB({"cookies":[],"Profile":{"pid":"b21e18aff8a9d6461ca089807df384d5","consent":[{"clientid":12639,"lastupdate":1607467200,"types":[{"name":"analytics","consent":true},{"name":"targeting","consent":true},{"name":"datasharing","consent":true},{"name":"crossdevice","consent":true}]}]},"redirectType":"JSONP","callback":"_cc12639.setConsentCB"})
