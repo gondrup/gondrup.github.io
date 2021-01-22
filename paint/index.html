@@ -1,0 +1,43 @@
+<html>
+<head>
+	<title>Paint</title>
+	<style>
+		body {
+			margin: 0;
+			padding: 0;
+		}
+
+		#tool-palette radio {
+			display:inline-block;
+			min-width: 40px;
+			height: 20px;
+			background: #eee;
+			border: 1px solid #000;
+		}
+
+		#board {
+			width: 640px;
+			height: 300px;
+		}
+
+		#colour-palette radio {
+			display:inline-block;
+			width: 40px;
+			height: 20px;
+			border: 1px solid #000;
+		}
+
+		/*#colour-palette radio:checked {
+			border: 2px solid #fff;
+		}*/
+	</style>
+</head>
+<body>
+	<div id="paint">
+		<div id="tool-palette"></div>
+		<canvas id="board"></canvas>
+		<div id="colour-palette"></div>
+	</div>
+	<script src="app.js"></script>
+</body>
+</html>
