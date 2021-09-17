@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<title>Card Dealer</title>
+		<script src="https://cdn.jsdelivr.net/npm/underscore@1.13.1/underscore-umd-min.js"></script>
+		<style>
+			body {
+				background: #210908;
+			}
+
+			#cards {
+				position: absolute;
+				left: 50%;
+				top: 50%;
+				-webkit-transform: translate(-50%, -50%);
+				transform: translate(-50%, -50%);
+
+				background: #35654d;
+				padding:  40px;
+				border: 5px solid #000;
+			}
+
+			#cards img {
+				display: block;
+				float: left;
+				width: 73px;
+				height: 97px;
+				margin-right: 10px;
+			}
+
+			#cards div {
+				overflow: hidden;
+				margin-bottom: 10px;
+			}
+		</style>
+	</head>
+	<body>
+		<div id="cards">
+			<div>
+				<img name="card-0" src="img/b.gif">
+				<img name="card-1" src="img/b.gif">
+				<img name="card-2" src="img/b.gif">
+				<img name="card-3" src="img/b.gif">
+				<img name="card-4" src="img/b.gif">
+			</div>
+			<button id="deal">Deal</button>
+		</div>
+		<script>
+			const entireDeck = [
+				'2h', '3h', '4h', '5h', '6h', '7h', '8h', '9h', 'th', 'jh', 'qh', 'kh', 'ah',
+				'2d', '3d', '4d', '5d', '6d', '7d', '8d', '9d', 'td', 'jd', 'qd', 'kd', 'ad',
+				'2c', '3c', '4c', '5c', '6c', '7c', '8c', '9c', 'tc', 'jc', 'qc', 'kc', 'ac',
+				'2s', '3s', '4s', '5s', '6s', '7s', '8s', '9s', 'ts', 'js', 'qs', 'ks', 'as'
+			];
+
+			let currentGameDeck;
+
+			function startGame() {
+				currentGameDeck = entireDeck;
+				_.each(document.images, (image) => image.src = 'img/b.gif');
+			}
+
+			function endGame() {
+				alert(`You have reached the end of the deck! (undrawn cards: ${currentGameDeck.join(', ')})`);
+				startGame();
+			}
+
+			function deal() {
+				if (_.size(currentGameDeck) < 5) {
+					endGame();
+					return;
+				}
+
+				const toDeal = _.sample(currentGameDeck, 5);
+
+				for (let i = 0; i < _.size(toDeal); i++) {
+					document.images[`card-${i}`].src = `img/${toDeal[i]}.gif`;
+				}
+
+				currentGameDeck = _.difference(currentGameDeck, toDeal);
+			}
+
+			startGame();
+
+			document.getElementById('deal').addEventListener('click', deal);
+		</script>
+	</body>
+</html>
