@@ -1,0 +1,419 @@
+
+<!doctype html>
+<html>
+<style>
+	div {
+        width: 640px;
+        height: 480px;
+	    background: url('img/sea.png');
+    }
+
+	img {
+        display: none;
+    }
+</style>
+<div>
+	<canvas id="gameCanvas" width="640" height="480"></canvas>
+</div>
+<img id="boat-right" src="img/boat-right.png">
+<img id="boat-left" src="img/boat-left.png">
+<img id="fish-right" src="img/fish-right.png">
+<img id="fish-left" src="img/fish-left.png">
+<img id="fish2-right" src="img/fish2-right.png">
+<img id="fish2-left" src="img/fish2-left.png">
+<img id="fish3-right" src="img/fish3-right.png">
+<img id="fish3-left" src="img/fish3-left.png">
+<script>
+    const gameWidth = 640;
+    const gameHeight = 480;
+
+    function getRandomArbitrary(min, max) {
+        return Math.random() * (max - min) + min;
+    }
+
+    function getRandomIntInclusive(min, max) {
+        min = Math.ceil(min);
+        max = Math.floor(max);
+        return Math.floor(Math.random() * (max - min + 1) + min);
+    }
+
+    function TextOverlay() {
+        this.init = function() {
+            this.fishCaught = 0;
+            this.crewHunger = 0;
+            this.timeElapsed = 0;
+            this.gameOver = false;
+
+            this.crewHungerText = 'Satisfied';
+        }
+
+        this.init();
+  
+        this.update = function() {
+            if (this.crewHunger >= 100) {
+                this.crewHungerText = 'Dead';
+            } else if (this.crewHunger >= 80) {
+                this.crewHungerText = 'Starving';
+            } else if (this.crewHunger >= 60) {
+                this.crewHungerText = 'Hungry';
+            } else if (this.crewHunger >= 40) {
+                this.crewHungerText = 'Peckish';
+            } else if (this.crewHunger >= 20) {
+                this.crewHungerText = 'Satisfied';
+            } else {
+                this.crewHungerText = 'Stuffed';
+            }
+        }
+
+        this.render = function(ctx) {
+            if (this.gameOver) {
+                ctx.font = '30px sans-serif';
+                ctx.fillStyle = 'red';
+                ctx.textAlign = 'center';
+                ctx.fillText('YOUR CREW DIED OF STARVATION', gameWidth / 2, (gameHeight / 2) - 15 - 20);
+                ctx.font = '20px sans-serif';
+                ctx.fillText(`You Lasted ${(this.timeElapsed / 1000).toFixed(2)} Seconds and Caught ${this.fishCaught} Fish`, gameWidth / 2, (gameHeight / 2) - 15);
+
+                ctx.font = '14px sans-serif';
+                ctx.fillStyle = 'white';
+                ctx.fillText('Press [ENTER] To Set Sail Again', gameWidth / 2, gameHeight - 30);
+            } else {
+                ctx.font = '20px sans-serif';
+                ctx.fillStyle = 'white';
+                ctx.textAlign = 'left';
+                ctx.fillText(`Crew: ${this.crewHungerText}`, 10, 20);
+            }
+        }
+    }
+
+    function Fish() {
+        this.imgs = [
+            {
+                'right': document.getElementById('fish-right'),
+                'left': document.getElementById('fish-left')
+            },
+            {
+                'right': document.getElementById('fish2-right'),
+                'left': document.getElementById('fish2-left')
+            },
+            {
+                'right': document.getElementById('fish3-right'),
+                'left': document.getElementById('fish3-left')
+            }
+        ];
+
+        const variation = getRandomIntInclusive(0, 2);
+        this.heading = (getRandomIntInclusive(0, 1) === 1) ? 'right' : 'left';
+        this.img = this.imgs[variation][this.heading];
+
+        this.w = 24;
+        this.h = 18;
+        this.x = (this.heading === 'right') ? -this.w : gameWidth;
+        this.y = getRandomIntInclusive(300, gameHeight - this.h);
+
+        this.gone = false;
+        this.hooked = false;
+        this.caught = false;
+        this.xVelocity = getRandomArbitrary(0.1, 0.3); 
+        if (this.heading === 'left') this.xVelocity = -this.xVelocity;
+
+        this.update = function(delta) {
+            if (this.gone || this.caught) {
+                return;
+            }
+
+            if (this.heading === 'right' && this.x > gameWidth) {
+                this.gone = true;
+                return;
+            }
+
+            if (this.heading === 'left' && this.x < -this.w) {
+                this.gone = true;
+                return;
+            }
+
+            if (!this.hooked) {
+                this.x += delta * this.xVelocity;
+            }
+        }
+
+        this.render = function(ctx) {
+            if (this.gone || this.caught) {
+                return;
+            }
+
+            ctx.drawImage(this.img, this.x, this.y, this.w, this.h);
+        }
+    }
+
+    function Player() {
+        this.rightImg = document.getElementById('boat-right');
+        this.leftImg = document.getElementById('boat-left');
+
+        this.w = 80;
+        this.h = 52;
+        this.y = 236;
+
+        this.init = function() {
+            this.x = 280;
+            this.lineLength = 0;
+
+            this.leftPressed = false;
+            this.rightPressed = false;
+            this.descendingLine = false;
+
+            this.heading = null;
+            this.img = this.rightImg;
+            this.xVelocity = 0;
+            this.lineLengthVelocity = 0;
+            this.lineX = null;
+            this.lineEndY = null;
+        }
+        
+        this.init();
+
+        this.onKeyUp = function(e) {
+            if (e.keyCode == '37') {
+                this.leftPressed = false;
+
+                if (this.rightPressed) {
+                    this.heading = 'right';
+                } else {
+                    this.heading = null;
+                }
+            } else if (e.keyCode == '39') {
+                this.rightPressed = false;
+
+                if (this.leftPressed) {
+                    this.heading = 'left';
+                } else {
+                    this.heading = null;
+                }
+            } else if (e.keyCode == '32') {
+                this.descendingLine = false; 
+            }
+        }
+
+        this.onKeyDown = function(e) {
+            if (e.keyCode == '37') {
+                this.leftPressed = true;
+                this.heading = 'left';
+            } else if (e.keyCode == '39') {
+                this.rightPressed = true;
+                this.heading = 'right';
+            } else if (e.keyCode == '32') {
+                this.descendingLine = true;
+            }
+        }
+
+        this.update = function(delta) {
+            if (this.heading === 'right' && this.x < (gameWidth - this.w)) {
+                this.xVelocity = 0.2;
+                this.img = this.rightImg;
+            } else if (this.heading === 'left' && this.x > 0) {
+                this.xVelocity = -0.2;
+                this.img = this.leftImg;
+            } else {
+                this.xVelocity = 0;
+            }
+
+            this.x += delta * this.xVelocity;
+
+            if (this.descendingLine && this.lineLength <= 192) {
+                this.lineLengthVelocity = 0.1;
+            } else if (this.lineLength > 0) {
+                this.lineLengthVelocity = -0.1;
+            } else {
+                this.lineLengthVelocity = 0;
+            }
+
+            this.lineLength += delta * this.lineLengthVelocity;
+        }
+
+        this.render = function(ctx) {
+            // Boat
+            ctx.drawImage(this.img, this.x, this.y, this.w, this.h);
+            
+            // Line
+            if (this.lineLength > 0) {
+                this.lineX = this.x + (this.w / 2);
+                const lineStartY = this.y + this.h;
+                this.lineEndY = lineStartY + this.lineLength;
+                ctx.beginPath();
+                ctx.lineWidth = 2;
+                ctx.strokeStyle = 'white';
+                ctx.moveTo(this.lineX, lineStartY);
+                ctx.lineTo(this.lineX, this.lineEndY);
+                ctx.stroke();
+
+                ctx.beginPath();
+                ctx.fillStyle = 'white';
+                ctx.arc(this.lineX, this.lineEndY, 3, 0, Math.PI * 2);
+                ctx.fill();
+            }
+        }
+    }
+
+    function Game() {
+        this.playing = false;
+
+        this.ctx = gameCanvas.getContext('2d');
+        this.player = new Player();
+        this.fishes = [];
+        this.textOverlay = new TextOverlay();
+        
+        this.init = function() {
+            this.fishCaught = 0;
+            this.crewHunger = 0;
+            this.crewHungerGainPerSecond = 1;
+            this.chanceOfFishPerSecond = 0.40;
+
+            this.animationRequest = null;
+            this.lastFrameTime = null;
+            this.lastFishCheckTime = null;
+            this.lastCrewHungerCheckTime = null;
+            this.lastCrewHungerGainIncreaseTime = null;
+        }
+
+        this.start = function() {
+            this.init();
+            this.player.init();
+            this.textOverlay.init();
+
+            this.crewHunger = 0;
+            this.crewHungerGainPerSecond = 1;
+
+            this.playing = true;
+            this.animationRequest = requestAnimationFrame(this.tick.bind(this));
+
+            document.onkeydown = this.player.onKeyDown.bind(this.player);
+            document.onkeyup = this.player.onKeyUp.bind(this.player);
+        }
+
+        this.stop = function() {
+            this.playing = false;
+            cancelAnimationFrame(this.animationRequest);
+
+            document.onkeydown = null;
+            document.onkeyup = (e) => {
+                if (e.keyCode == '13') {
+                    this.start();
+                }
+            } 
+        }
+
+        this.addFish = function() {
+            const fish = new Fish();
+            this.fishes.push(fish);
+        }
+
+        this.hookFishHitCheck = function() {
+            for (fish of this.fishes.filter(fish => fish.hooked === false)) {
+                if (
+                    fish.x < this.player.lineX
+                    && (fish.x + fish.w) > this.player.lineX
+                    && fish.y < this.player.lineEndY
+                    && (fish.y + fish.h) > this.player.lineEndY 
+                ) {
+                    fish.hooked = true;
+                }
+            }
+        }
+
+        this.update = function(delta, time) {
+            if (time - this.lastCrewHungerCheckTime >= 1000) {
+                this.crewHunger += this.crewHungerGainPerSecond;
+                
+                this.lastCrewHungerCheckTime = time;
+            }
+
+            if (time - this.lastCrewHungerGainIncreaseTime >= 5000) {
+                if (this.crewHungerGainPerSecond < 10) {
+                    this.crewHungerGainPerSecond += 1;
+                }
+
+                this.lastCrewHungerGainIncreaseTime = time;
+            }
+
+            this.player.update(delta);
+
+            if (time - this.lastFishCheckTime >= 1000) {
+                if (Math.random() < this.chanceOfFishPerSecond) {
+                    this.addFish();
+                }
+                
+                this.lastFishCheckTime = time;
+            }
+
+            let fishHooked = false;
+
+            for (const fish of this.fishes) {
+                fish.update(delta); 
+
+                if (fish.hooked) {
+                    fishHooked = true;
+
+                    if (this.player.lineLength < 1) {  
+                        fish.caught = true;
+                        this.crewHunger -= 20;
+                        this.fishCaught += 1;
+                    } else {
+                        fish.y = this.player.lineEndY - (fish.h / 2);
+                        fish.x += delta * this.player.xVelocity;
+                    }
+                }
+            }
+
+            if (fishHooked === false) {
+                this.hookFishHitCheck();
+            }
+
+            this.fishes = this.fishes.filter(fish => !fish.caught && !fish.gone);
+
+            this.textOverlay.crewHunger = this.crewHunger;
+            this.textOverlay.fishCaught = this.fishCaught;
+            this.textOverlay.timeElapsed += delta;
+            this.textOverlay.update();
+
+            if (this.crewHunger >= 100) {
+                this.textOverlay.gameOver = true;
+                this.textOverlay.update();
+                this.textOverlay.render(this.ctx);
+                this.stop();
+            } else {
+                this.textOverlay.gameOver = false;
+            }
+        }
+
+        this.render = function() {
+            this.ctx.clearRect(0, 0, gameWidth, gameHeight);
+            this.player.render(this.ctx);
+
+            for (const fish of this.fishes) {
+                fish.render(this.ctx);
+            }
+
+            this.textOverlay.render(this.ctx);
+        }
+
+        this.tick = function(time) {
+            if (!this.playing) {
+                return;
+            }
+
+            if (this.lastFrameTime != null) {
+                const delta = time - this.lastFrameTime;
+
+                this.update(delta, time);
+                this.render();
+            }
+
+            this.lastFrameTime = time;
+            requestAnimationFrame(this.tick.bind(this));
+        }
+    }
+
+    const game = new Game();
+    game.start();
+</script>
+</html>
