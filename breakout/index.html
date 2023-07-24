@@ -1,0 +1,773 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8" />
+    <title>R&D Breakout</title>
+    <style>
+        body {
+            background: #000;
+        }
+
+        div.row {
+            float: none;
+            clear: both;
+        }
+
+        div.cell {
+            float: left;
+            width: 8px;
+            height: 8px;
+            border: 1px solid #333;
+            /*margin: 1px;*/
+        }
+    </style>
+</head>
+<body>
+    <section id="grid">
+    </section>
+    <script>
+        // Utility Functions
+
+        // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Math/random#getting_a_random_integer_between_two_values
+        function getRandomInt(min, max) {
+            min = Math.ceil(min);
+            max = Math.floor(max);
+            return Math.floor(Math.random() * (max - min) + min); //The maximum is exclusive and the minimum is inclusive
+        }
+
+        // Grid/Cell Logic
+
+        class Cell {
+            #active = false;
+            #colour = '#fff';
+
+            constructor(x, y, el) {
+                this.x = x;
+                this.y = y;
+                this.el = el;
+            }
+
+            set active(active) {
+                this.#active = active;
+
+                if (active) {
+                    this.el.style.backgroundColor = this.#colour;
+                } else {
+                    this.el.style.backgroundColor = null;
+                }
+            }
+
+            get active() {
+                return this.#active;
+            }
+
+            set colour(colour) {
+                this.#colour = colour;
+
+                if (this.active) {
+                    this.el.style.backgroundColor = colour;
+                } else {
+                    this.el.style.backgroundColor = null;
+                }
+            }
+
+            get colour() {
+                return this.#colour;
+            }
+        }
+
+        class Grid {
+            cells;
+
+            constructor(cells) {
+                this.cells = cells;
+            }
+
+            getCellAt(x, y) {
+                for (const index in this.cells) {
+                    if (this.cells[index].x == x && this.cells[index].y == y) {
+                        return this.cells[index];
+                    }
+                }
+
+                return null;
+            }
+
+            setCellState(x, y, active, colour) {
+                const cell = this.getCellAt(x, y);
+                cell.active = active;
+                cell.colour = colour;
+            }
+
+            clearGrid() {
+                for (const index in this.cells) {
+                    this.cells[index].active = false;
+                }
+            }
+
+            get dimensions() {
+                let dimensions = {
+                    width: 0,
+                    height: 0,
+                };
+
+                for (const index in this.cells) {
+                    if (dimensions.width < this.cells[index].x + 1) {
+                        dimensions.width = this.cells[index].x + 1;
+                    }
+
+                    if (dimensions.height < this.cells[index].y + 1) {
+                        dimensions.height = this.cells[index].y + 1;
+                    }
+                }
+
+                return dimensions;
+            }
+        }
+
+        function renderGrid(gridContainerEl) {
+            const gridWidth = 80;
+            const gridHeight = 44;
+            const cells = [];
+
+            for (let y = 0; y < gridHeight; y++) {
+                const rowEl = document.createElement('div');
+                rowEl.classList.add('row');
+                gridContainerEl.appendChild(rowEl);
+
+                for (let x = 0; x < gridWidth; x++) {
+                    const cell = new Cell(
+                        x,
+                        y,
+                        document.createElement('div')
+                    );
+                    cell.el.classList.add('cell');
+
+                    rowEl.appendChild(cell.el);
+                    cells.push(cell);
+                }
+            }
+
+            return new Grid(cells);
+        }
+
+        const grid = renderGrid(document.getElementById('grid'));
+
+        // Game logic
+
+        class Paddle {
+            alive = true;
+
+            xPos;
+            yPos;
+            width = 5;
+
+            constructor(xPos, yPos) {
+                this.xPos = xPos;
+                this.yPos = yPos;
+            }
+
+            get gridCoords() {
+                return {
+                    x: Math.round(this.xPos),
+                    y: Math.round(this.yPos)
+                };
+            }
+        }
+
+        class Ball {
+            movementSpeed = 1;
+
+            attachedToPaddle = false;
+
+            xPos;
+            yPos;
+
+            xVelocity = 0;
+            yVelocity = 0;
+
+            constructor(xPos, yPos) {
+                this.xPos = xPos;
+                this.yPos = yPos;
+            }
+
+            get gridCoords() {
+                return {
+                    x: Math.round(this.xPos),
+                    y: Math.round(this.yPos)
+                };
+            }
+        }
+
+        class Block {
+            scoreValue = 10;
+
+            xPos;
+            yPos;
+            colour;
+            
+            width = 4;
+            height = 1
+
+            constructor(xPos, yPos, colour) {
+                this.xPos = xPos;
+                this.yPos = yPos;
+                this.colour = colour;
+            }
+
+            get gridCoords() {
+                return {
+                    x: Math.round(this.xPos),
+                    y: Math.round(this.yPos)
+                };
+            }
+        }
+
+        class Board {
+            blocks = [];
+
+            constructor() {
+                this.loadBlocks();
+            }
+
+            get completed() {
+                return blocks.length === 0;
+            }
+
+            getBlockAtPosition(x, y) {
+                for (const blockIndex in this.blocks) {
+                    const block = this.blocks[blockIndex];
+
+                    const xHit = (block.xPos <= x && (block.xPos + block.width - 1) >= x);
+                    const yHit = (block.yPos <= y && (block.yPos + block.height - 1) >= y);
+
+                    if (xHit && yHit) {
+                        return block;
+                    }
+                }
+
+                return null;
+            }
+
+            removeBlock(block) {
+                const index = this.blocks.indexOf(block);
+                if (index !== -1) {
+                    this.blocks.splice(index, 1);
+                }
+            }
+        }
+
+        class Board1 extends Board {
+            loadBlocks() {
+                function getNextColour() {
+                    const colours = [
+                        '#00f0f1',
+                        '#0000f0',
+                        '#efa000',
+                        '#bce1fa',
+                        '#9f00f5',
+                        '#f00100',
+                        '#30ff49'
+                    ];
+
+                    return colours[getRandomInt(0, colours.length)];
+                }
+
+                const width = 18;
+                const height = 6;
+
+                for (let i = 1; i <= height; i++) {
+                    for (let j = 1; j <= width; j++) {
+                        const y = 3 + i;
+                        const x = j * 4;
+
+                        const block = new Block(x, y, getNextColour());
+                        this.blocks.push(block);
+                    }
+                }
+            }
+        }
+
+        class Game {
+            grid;
+            paddle;
+            gameContainerEl;
+            balls = [];
+            board;
+
+            lives = 3;
+            score = 0;
+
+            #timeBetweenFrames = 1000 / 30; // 30 fps
+
+            #gameActive = false;
+            #blockRendering = false;
+            #lastRender;
+
+            constructor(grid, gameContainerEl) {
+                this.grid = grid;
+                this.gameContainerEl = gameContainerEl;
+
+                this.paddle = new Paddle(37, 35);
+
+                this.addBall();
+            }
+
+            containBallInGrid(ball) {
+                const containVelocity = (pos, vel, min, max) => {
+                    if (pos < min && vel < 0) {
+                        return -vel;
+                    } else if (pos > max && vel > 0) {
+                        return -vel;
+                    }
+
+                    return vel;
+                };
+
+                ball.xVelocity = containVelocity(
+                    ball.xPos + (ball.xVelocity * ball.movementSpeed),
+                    ball.xVelocity,
+                    0,
+                    this.grid.dimensions.width - 1
+                );
+
+                ball.yVelocity = containVelocity(
+                    ball.yPos + (ball.yVelocity * ball.movementSpeed),
+                    ball.yVelocity,
+                    0,
+                    this.grid.dimensions.height - 1
+                );
+            }
+
+            ballPaddleCollisionCheck(ball) {
+                const newXVelocity = (ballX, paddleX, paddleW) => {
+                    const posRatio = (ballX - paddleX) / paddleW;
+
+                    let newXVel;
+
+                    if (posRatio < 0.5) {
+                        newXVel = -(0.5 - posRatio);
+                    } else {
+                        newXVel = posRatio - 0.5;
+                    }
+
+                    return newXVel * 3;
+                };
+
+                const newXPos = Math.round(ball.xPos + (ball.xVelocity * ball.movementSpeed));
+                const newYPos = Math.round(ball.yPos + (ball.yVelocity * ball.movementSpeed));
+
+                if (newYPos == this.paddle.gridCoords.y && ball.yVelocity > 0) {
+                    if (newXPos >= this.paddle.xPos && newXPos <= (this.paddle.gridCoords.x + this.paddle.width)) {
+                        ball.xVelocity = newXVelocity(
+                            ball.xPos,
+                            this.paddle.gridCoords.x,
+                            this.paddle.width
+                        );
+                        ball.yVelocity = -ball.yVelocity;
+                    }
+                } 
+            }
+
+            ballBlockCollisionCheck(ball) {
+                const reboundVelocity = (pos, vel, objectMin, objectMax) => {
+                    if (pos <= objectMin && vel > 0) {
+                        return -vel;
+                    } else if (pos >= objectMax && vel < 0) {
+                        return -vel;
+                    }
+
+                    return vel;
+                };
+
+                const newXPos = ball.xPos + (ball.xVelocity * ball.movementSpeed);
+                const newYPos = ball.yPos + (ball.yVelocity * ball.movementSpeed);
+
+                const hitBlock = this.board.getBlockAtPosition(Math.round(newXPos), Math.round(newYPos));
+
+                if (hitBlock) {
+                    ball.xVelocity = reboundVelocity(
+                        Math.round(ball.xPos),
+                        ball.xVelocity,
+                        hitBlock.xPos,
+                        hitBlock.xPos + hitBlock.width - 1
+                    );
+
+                    ball.yVelocity = reboundVelocity(
+                        Math.round(ball.yPos),
+                        ball.yVelocity,
+                        hitBlock.yPos,
+                        hitBlock.yPos + hitBlock.height - 1
+                    );
+
+                    this.score += hitBlock.scoreValue;
+                    this.board.removeBlock(hitBlock);
+                }
+            }
+
+            animateBalls() {
+                let ballsToRemove = [];
+
+                for (const ballIndex in this.balls) {
+                    const ball = this.balls[ballIndex];
+
+                    if (ball.yPos >= this.grid.dimensions.height - 1) {
+                        ballsToRemove.push(ballIndex);
+                        continue;
+                    }
+
+                    if (!ball.attachedToPaddle) {
+                        this.containBallInGrid(ball);
+
+                        this.ballBlockCollisionCheck(ball);
+
+                        this.ballPaddleCollisionCheck(ball);
+
+                        ball.xPos += ball.xVelocity * ball.movementSpeed;
+                        ball.yPos += ball.yVelocity * ball.movementSpeed;
+                    }
+                }
+
+                for (const index in ballsToRemove) {
+                    this.balls.splice(ballsToRemove[index], 1);
+
+                    if (this.lives > 1) {
+                        this.lives -= 1;
+                        this.addBall();
+                    } else {
+                        this.lives = 0;
+                        this.gameOver();
+                    }
+                }
+            }
+
+            animate() {
+                this.animateBalls();
+            }
+
+            renderBlocks() {
+                if (this.board) {
+                    for (const blockIndex in this.board.blocks) {
+                        const block = this.board.blocks[blockIndex];
+
+                        const start = block.gridCoords.x;
+                        const end = block.gridCoords.x + block.width;
+
+                        for (let x = start; x < end; x++) {
+                            this.grid.setCellState(
+                                x,
+                                block.gridCoords.y,
+                                true,
+                                block.colour
+                            );
+                        }
+                    }
+                }
+            }
+
+            renderPaddle() {
+                const start = this.paddle.gridCoords.x;
+                const end = this.paddle.gridCoords.x + this.paddle.width;
+
+                for (let x = start; x <= end; x++) {
+                    this.grid.setCellState(
+                        x,
+                        this.paddle.gridCoords.y,
+                        true,
+                        '#fff'
+                    );
+                }
+            }
+
+            renderBalls() {
+                for (const ballIndex in this.balls) {
+                    const ball = this.balls[ballIndex];
+
+                    this.grid.setCellState(
+                        ball.gridCoords.x,
+                        ball.gridCoords.y,
+                        true,
+                        '#fff'
+                    );
+                }
+            }
+
+            renderLives() {
+                const startX = 4;
+                const startY = 41;
+                const space = 1;
+                const width = 2;
+
+                for (let i = 0; i < this.lives; i++) {
+                    for (let j = 0; j < width; j++) {
+                        this.grid.setCellState(
+                            startX + (i * (space + width)) + j,
+                            startY,
+                            true,
+                            '#fff'
+                        );
+                    }
+                }
+            }
+
+            renderScore() {
+                function getDigitLayout(digit) {
+                    switch (digit) {
+                        case '0':
+                            return [
+                                [1, 1, 1],
+                                [1, 0, 1],
+                                [1, 0, 1],
+                                [1, 0, 1],
+                                [1, 1, 1],
+                            ];
+                        case '1':
+                            return [
+                                [0, 1, 0],
+                                [0, 1, 0],
+                                [0, 1, 0],
+                                [0, 1, 0],
+                                [0, 1, 0],
+                            ];
+                        case '2':
+                            return [
+                                [1, 1, 1],
+                                [0, 0, 1],
+                                [0, 1, 1],
+                                [1, 0, 0],
+                                [1, 1, 1],
+                            ];
+                        case '3':
+                            return [
+                                [1, 1, 1],
+                                [0, 0, 1],
+                                [0, 1, 1],
+                                [0, 0, 1],
+                                [1, 1, 1],
+                            ];
+                        case '4':
+                            return [
+                                [1, 0, 1],
+                                [1, 0, 1],
+                                [1, 1, 1],
+                                [0, 0, 1],
+                                [0, 0, 1],
+                            ];
+                        case '5':
+                            return [
+                                [1, 1, 1],
+                                [1, 0, 0],
+                                [1, 1, 1],
+                                [0, 0, 1],
+                                [1, 1, 1],
+                            ];
+                        case '6':
+                            return [
+                                [1, 1, 1],
+                                [1, 0, 0],
+                                [1, 1, 1],
+                                [1, 0, 1],
+                                [1, 1, 1],
+                            ];
+                        case '7':
+                            return [
+                                [1, 1, 1],
+                                [0, 0, 1],
+                                [0, 1, 0],
+                                [0, 1, 0],
+                                [0, 1, 0],
+                            ];
+                        case '8':
+                            return [
+                                [1, 1, 1],
+                                [1, 0, 1],
+                                [1, 1, 1],
+                                [1, 0, 1],
+                                [1, 1, 1],
+                            ];
+                        case '9':
+                            return [
+                                [1, 1, 1],
+                                [1, 0, 1],
+                                [1, 1, 1],
+                                [0, 0, 1],
+                                [1, 1, 1],
+                            ];
+                    }
+
+                    return null;
+                }
+
+                const renderDigit = (digit, endX, endY) => {
+                    const layout = getDigitLayout(digit);
+
+                    if (layout !== null) {
+                        for (let i = 0; i < layout.length; i++) {
+                            for (let j = 0; j < layout[i].length; j++) {
+                                if (layout[i][j] === 1) {
+                                    this.grid.setCellState(
+                                        endX - layout[i].length + j,
+                                        endY - layout.length + i,
+                                        true,
+                                        '#ccc'
+                                    );
+                                }
+                            } 
+                        }
+                    }
+                }
+
+                const endX = 80;
+                const endY = 42;
+                const space = 1;
+                const digitWidth = 3;
+
+                const digits = this.score.toString().split('');
+
+                for (let i = digits.length - 1; i >= 0; i--) {
+                    renderDigit(
+                        digits[i],
+                        endX - ((digits.length - i) * (digitWidth + space)),
+                        endY
+                    );
+                }
+            }
+
+            render() {
+                if (this.#blockRendering) {
+                    return;
+                }
+
+                this.grid.clearGrid();
+                this.renderBlocks();
+                this.renderPaddle();
+                this.renderBalls();
+                this.renderLives();
+                this.renderScore();
+            }
+
+            gameLoop(timestamp) {
+                if (!this.#lastRender) {
+                    this.#lastRender = timestamp;
+                }
+                const renderElapsed = timestamp - this.#lastRender;
+
+                if (renderElapsed > this.#timeBetweenFrames) {
+                    this.animate();
+                    this.render();
+                    this.#lastRender = timestamp;
+                }
+
+                if (this.#gameActive) {
+                    window.requestAnimationFrame(this.gameLoop.bind(this));
+                }
+            }
+
+            loadBoard(board) {
+                this.board = board;
+            }
+
+            start() {
+                this.#gameActive = true;
+                this.bindUserInput();
+                window.requestAnimationFrame(this.gameLoop.bind(this));
+            }
+
+            stop() {
+                this.#gameActive = false;
+            }
+
+            gameOver() {
+                this.stop();
+                alert(`Game over! You scored ${this.score}!`);
+            }
+
+            get ballAttachedToPaddleCoords() {
+                return {
+                    x: this.paddle.gridCoords.x + (this.paddle.width / 2),
+                    y: this.paddle.gridCoords.y - 1
+                };
+            }
+
+            addBall() {
+                const coords = this.ballAttachedToPaddleCoords;
+
+                const ball = new Ball(
+                    coords.x,
+                    coords.y
+                );
+                ball.attachedToPaddle = true;
+                this.balls.push(ball);
+            }
+
+            bindUserInput() {
+                this.gameContainerEl.addEventListener('click', async () => {
+                    await this.gameContainerEl.requestPointerLock();
+                });
+
+                const movePaddle = (e) => {
+                    const paddleSpeedRatio = 0.05;
+
+                    const getNewPosition = (pos, delta, min, max) => {
+                        const newPos = pos + delta;
+
+                        if (newPos < min || newPos > max) {
+                            return pos;
+                        }
+
+                        return newPos;
+                    }
+
+                    this.paddle.xPos = getNewPosition(
+                        this.paddle.xPos,
+                        e.movementX * paddleSpeedRatio,
+                        0,
+                        this.grid.dimensions.width - this.paddle.width - 1
+                    );
+
+                    // Update balls that are attached
+
+                    const coords = this.ballAttachedToPaddleCoords;
+
+                    for (const ballIndex in this.balls) {
+                        const ball = this.balls[ballIndex];
+
+                        if (ball.attachedToPaddle) {
+                            ball.xPos = coords.x;
+                            ball.yPos = coords.y;
+                        }
+                    }
+                }
+
+                const fire = (e) => {
+                    for (const ballIndex in this.balls) {
+                        const ball = this.balls[ballIndex];
+
+                        if (ball.attachedToPaddle) {
+                            ball.attachedToPaddle = false;
+                            ball.xVelocity = 0.4;
+                            ball.yVelocity = -1;
+                        }
+                    }
+                }
+
+                const pointerLockChange = () => {
+                    if (document.pointerLockElement === this.gameContainerEl) {
+                        document.addEventListener('mousemove', movePaddle);
+                        document.addEventListener('click', fire);
+                    } else {
+                        document.removeEventListener('mousemove', movePaddle);
+                        document.removeEventListener('click', fire);
+                    }
+                }
+
+                document.addEventListener('pointerlockchange', pointerLockChange);
+            }
+        }
+
+        const game = new Game(grid, document.getElementById('grid'));
+        game.loadBoard(new Board1());
+        game.start();
+    </script>
+</body>
+</html>
