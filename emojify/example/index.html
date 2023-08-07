@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<!--[if lt IE 7]>      <html class="no-js lt-ie9 lt-ie8 lt-ie7"> <![endif]-->
+<!--[if IE 7]>         <html class="no-js lt-ie9 lt-ie8"> <![endif]-->
+<!--[if IE 8]>         <html class="no-js lt-ie9"> <![endif]-->
+<!--[if gt IE 8]>      <html class="no-js"> <!--<![endif]-->
+<html>
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <title>R&D Emojify Library Example</title>
+        <meta name="description" content="">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <link rel="stylesheet" href="">
+        <style>
+            html, body {
+                height: 100%;
+                background: #F8F0E5;
+            }
+
+            div#test {
+                margin: 10%;
+                width: 80%;
+                height: 80%;
+                background: #DAC0A3;
+            }
+        </style>
+    </head>
+    <body>
+        <div id="test"></div>
+
+        <script src="../dist/emojify.js"></script>
+        <script>
+            //emojify().sayHi()
+
+            const ej = emojify(document.getElementById('test'))
+            ej.border('🤖')
+
+            setTimeout(() => {
+                ej.removeBorder()
+            }, 2000)
+
+            setTimeout(() => {
+                ej.border()
+            }, 4000)
+
+            setTimeout(() => {
+                ej.animateBorder()
+            }, 6000)
+
+            setTimeout(() => {
+                ej.stopAnimatingBorder()
+            }, 8000)
+
+            setTimeout(() => {
+                ej.animateBorder()
+            }, 10000)
+        </script>
+    </body>
+</html>
