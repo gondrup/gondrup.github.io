@@ -30,8 +30,6 @@
 
         <script src="../dist/emojify.js"></script>
         <script>
-            //emojify().sayHi()
-
             const ej = emojify(document.getElementById('test'))
             ej.border('🤖')
 
@@ -44,16 +42,24 @@
             }, 4000)
 
             setTimeout(() => {
-                ej.animateBorder()
+                ej.rotateAnimation()
             }, 6000)
 
             setTimeout(() => {
-                ej.stopAnimatingBorder()
-            }, 8000)
+                ej.rotateAnimationReversed()
+            }, 9000)
 
             setTimeout(() => {
-                ej.animateBorder()
-            }, 10000)
+                ej.randomSwapAnimation()
+            }, 12000)
+
+            setTimeout(() => {
+                ej.blinkAnimation()
+            }, 15000)
+
+            setTimeout(() => {
+                ej.rotateAnimation()
+            }, 20000)
         </script>
     </body>
 </html>
