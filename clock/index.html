@@ -1,0 +1,345 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>R&D: Clock</title>
+    <style>
+        body {
+            background-color: #000;
+        }
+    </style>
+</head>
+<body>
+    <canvas id="pacman"></canvas>
+    <div style="display:none;">
+        <img id="background-image" src="background.webp" />
+        <img id="cherry-image" src="cherry.png" />
+    </div>
+    <script>
+        const gameWidth = 480;
+        const gameHeight = 576;
+        const cellWidth = gameWidth / 30;
+        const cellHeight = gameHeight / 36;
+
+        const canvas = document.getElementById('pacman');
+        const bgImage = document.getElementById('background-image');
+        const cherryImage = document.getElementById('cherry-image');
+
+        if (canvas.getContext) {
+            const ctx = canvas.getContext('2d');
+            ctx.canvas.width = gameWidth;
+            ctx.canvas.height = gameHeight;
+
+            function gridRefToPixels(gridX, gridY) {
+                return {
+                    x: gridX * cellWidth,
+                    y: gridY * cellHeight
+                };
+            }
+
+            function drawGrid() {
+                for (let x = cellWidth; x < gameWidth; x += cellWidth) {
+                    ctx.strokeStyle = 'rgb(16, 16, 16)';
+                    ctx.moveTo(x, 0);
+                    ctx.lineTo(x, gameHeight);
+                    ctx.stroke();
+                }
+
+                for (let y = cellHeight; y < gameHeight; y += cellHeight) {
+                    ctx.strokeStyle = 'rgb(16, 16, 16)';
+                    ctx.moveTo(0, y);
+                    ctx.lineTo(gameWidth, y);
+                    ctx.stroke();
+                }
+            }
+
+            function fillCell(gridX, gridY, fillStyle) {
+                const coords = gridRefToPixels(gridX, gridY);
+
+                ctx.beginPath();
+                ctx.fillStyle = fillStyle;
+                ctx.rect(coords.x, coords.y, cellWidth, cellHeight);
+                ctx.fill();
+            }
+
+            function drawDot(gridX, gridY) {
+                const coords = gridRefToPixels(gridX, gridY);
+
+                ctx.beginPath();
+                ctx.fillStyle = 'rgb(255, 255, 255)';
+                ctx.rect(
+                    coords.x + cellWidth / 2 - (cellWidth * 0.1),
+                    coords.y + cellHeight / 2 - (cellHeight * 0.1),
+                    cellWidth * 0.2,
+                    cellHeight * 0.2
+                );
+                ctx.fill();
+            }
+
+            function drawCherry(gridX, gridY) {
+                const coords = gridRefToPixels(gridX, gridY);
+                ctx.drawImage(
+                    cherryImage,
+                    coords.x + (cellWidth / 2) - (cellWidth * 0.75),
+                    coords.y + (cellWidth / 2) - (cellHeight * 0.75),
+                    cellWidth * 1.5,
+                    cellHeight * 1.5
+                );
+            }
+
+            function drawPacMan(gridX, gridY, facing) {
+                const coords = gridRefToPixels(gridX, gridY);
+
+                const centreX = coords.x + (cellWidth/2);
+                const centreY = coords.y + (cellHeight/2);
+                const radius = (cellHeight/2) * 1.5;
+
+                let arc1angle, arc2angle;
+
+                switch (facing) {
+                    case 'up':
+                        arc1angle = 1.75;
+                        arc2angle = 2.25;
+                        break;
+                    case 'down':
+                        arc1angle = 0.75;
+                        arc2angle = 1.25;
+                        break;
+                    case 'left':
+                        arc1angle = 1.25;
+                        arc2angle = 1.75;
+                        break;
+                    default:
+                        arc1angle = 0.25;
+                        arc2angle = 0.75;
+                        break;
+                }
+
+                ctx.beginPath();
+                ctx.arc(centreX, centreY, radius, arc1angle * Math.PI, (arc1angle + 1) * Math.PI, false);
+                ctx.fillStyle = 'rgb(255, 255, 0)';
+                ctx.fill();
+                ctx.beginPath();
+                ctx.arc(centreX, centreY, radius, arc2angle * Math.PI, (arc2angle + 1) * Math.PI, false);
+                ctx.fill();
+            }
+
+            const food = [
+                // up
+                {x: 6, y: 17, eatenAt: 60},
+                {x: 6, y: 16, eatenAt: 120},
+                {x: 6, y: 15, eatenAt: 180},
+                {x: 6, y: 14, eatenAt: 240},
+                {x: 6, y: 13, eatenAt: 300},
+                {x: 6, y: 12, eatenAt: 360},
+                {x: 6, y: 11, eatenAt: 420},
+                {x: 6, y: 10, eatenAt: 480},
+                {x: 6, y: 9, eatenAt: 540},
+                {x: 6, y: 8, eatenAt: 600},
+
+                // right
+                {x: 7, y: 8, eatenAt: 660},
+                {x: 8, y: 8, eatenAt: 720},
+                {x: 9, y: 8, eatenAt: 780},
+                {x: 10, y: 8, eatenAt: 840},
+                {x: 11, y: 8, eatenAt: 900},
+                {x: 12, y: 8, eatenAt: 960},
+                {x: 13, y: 8, eatenAt: 1020},
+                {x: 14, y: 8, eatenAt: 1080},
+                {x: 15, y: 8, eatenAt: 1140},
+                {x: 16, y: 8, eatenAt: 1200},
+                {x: 17, y: 8, eatenAt: 1260},
+                {x: 18, y: 8, eatenAt: 1320},
+
+                // down
+                {x: 18, y: 9, eatenAt: 1380},
+                {x: 18, y: 10, eatenAt: 1440},
+                {x: 18, y: 11, eatenAt: 1500},
+
+                // left
+                {x: 17, y: 11, eatenAt: 1560},
+                {x: 16, y: 11, eatenAt: 1620},
+                {x: 15, y: 11, eatenAt: 1680},
+
+                // down
+                {x: 15, y: 12, eatenAt: 1740},
+                {x: 15, y: 13, eatenAt: 1800},
+                {x: 15, y: 14, eatenAt: 1860},
+
+                // left
+                {x: 14, y: 14, eatenAt: 1920},
+                {x: 13, y: 14, eatenAt: 1980},
+                {x: 12, y: 14, eatenAt: 2040},
+                {x: 11, y: 14, eatenAt: 2100},
+                {x: 10, y: 14, eatenAt: 2160},
+                {x: 9, y: 14, eatenAt: 2220},
+
+                // down
+                {x: 9, y: 15, eatenAt: 2280},
+                {x: 9, y: 16, eatenAt: 2340},
+                {x: 9, y: 17, eatenAt: 2400},
+                {x: 9, y: 18, eatenAt: 2460},
+                {x: 9, y: 19, eatenAt: 2520},
+                {x: 9, y: 20, eatenAt: 2580},
+                {x: 9, y: 21, eatenAt: 2640},
+                {x: 9, y: 22, eatenAt: 2700},
+                {x: 9, y: 23, eatenAt: 2760},
+
+                // right
+                {x: 10, y: 23, eatenAt: 2820},
+                {x: 11, y: 23, eatenAt: 2880},
+                {x: 12, y: 23, eatenAt: 2940},
+                
+                // down
+                {x: 12, y: 24, eatenAt: 3000},
+                {x: 12, y: 25, eatenAt: 3060},
+                {x: 12, y: 26, eatenAt: 3120},
+
+                // right
+                {x: 13, y: 26, eatenAt: 3180},
+                {x: 14, y: 26, eatenAt: 3240},
+                {x: 15, y: 26, eatenAt: 3300},
+                {x: 16, y: 26, eatenAt: 3360},
+                {x: 17, y: 26, eatenAt: 3420},
+                {x: 18, y: 26, eatenAt: 3480},
+                {x: 19, y: 26, eatenAt: 3540},
+                {x: 20, y: 26, eatenAt: 3600},
+                {x: 21, y: 26, eatenAt: 3660},
+
+                // up
+                {x: 21, y: 25, eatenAt: 3720},
+                {x: 21, y: 24, eatenAt: 3780},
+                {x: 21, y: 23, eatenAt: 3840},
+                {x: 21, y: 22, eatenAt: 3900},
+                {x: 21, y: 21, eatenAt: 3960},
+                {x: 21, y: 20, eatenAt: 4020},
+                {x: 21, y: 19, eatenAt: 4080},
+                {x: 21, y: 18, eatenAt: 4140},
+                //{x: 21, y: 17, eatenAt: 4200},
+            ];
+
+            const cherries = [
+                {x: 21, y: 17, eatenAt: 4200},
+            ];
+
+            const keyPacManStates = [
+                {seconds: 0, x: 5, y: 17, direction: 'right', moving: true},
+                {seconds: 60, x: 6, y: 17, direction: 'up', moving: true},
+                {seconds: 600, x: 6, y: 8, direction: 'right', moving: true},
+                {seconds: 1320, x: 18, y: 8, direction: 'down', moving: true},
+                {seconds: 1500, x: 18, y: 11, direction: 'left', moving: true},
+                {seconds: 1680, x: 15, y: 11, direction: 'down', moving: true},
+                {seconds: 1860, x: 15, y: 14, direction: 'left', moving: true},
+                {seconds: 2220, x: 9, y: 14, direction: 'down', moving: true},
+                {seconds: 2760, x: 9, y: 23, direction: 'right', moving: true},
+                {seconds: 2940, x: 12, y: 23, direction: 'down', moving: true},
+                {seconds: 3120, x: 12, y: 26, direction: 'right', moving: true},
+                {seconds: 3660, x: 21, y: 26, direction: 'up', moving: true},
+                {seconds: 4199, x: 21, y: 17, direction: 'right', moving: true},
+            ];
+
+            function getStateForTime(hours, seconds) {
+                let state = {};
+
+                // Pac man
+
+                const keyState = keyPacManStates.findLast((item) => item.seconds <= seconds);
+                const xVel = 1 / 60;
+                const yVel = 1 / 60;
+                let xDiff = 0, yDiff = 0;
+
+                if (keyState.moving) {
+                    switch(keyState.direction) {
+                        case 'up': yDiff = -(seconds - keyState.seconds) * yVel; break;
+                        case 'down': yDiff = (seconds - keyState.seconds) * yVel; break;
+                        case 'left': xDiff = -(seconds - keyState.seconds) * xVel; break;
+                        case 'right': xDiff = (seconds - keyState.seconds) * xVel; break;
+                    }
+                }
+
+                state.pacMan = {
+                    x: keyState.x + xDiff,
+                    y: keyState.y + yDiff,
+                    facing: keyState.direction,
+                };
+                
+                // Food & Cherries
+
+                state.foodLeft = food.filter((item) => item.eatenAt > seconds);
+                state.cherriesLeft = cherries.filter((item) => item.eatenAt > seconds);
+                state.hourCherries = hours;
+
+                // Background effect
+
+                const secondsInCurrentMinute = seconds % 60;
+                const even = (secondsInCurrentMinute % 2 == 0);
+
+                state.background = {
+                    x: Math.floor(secondsInCurrentMinute / 2),
+                    startY: even ? 0 : 18,
+                    endY: even ? 18 : 36,
+                };
+
+                return state;
+            }
+
+            function draw() {
+                const d = new Date();
+                const hours = d.getHours();
+                const seconds = ((d.getMinutes()) * 60) + d.getSeconds();
+                
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+                const state = getStateForTime(hours, seconds);
+
+                for (let y = state.background.startY; y < state.background.endY; y++) {
+                    fillCell(state.background.x, y, 'rgb(32, 32, 32)');
+                }
+
+                drawGrid();
+
+                ctx.drawImage(bgImage, 0, 0, canvas.width-32, canvas.height);
+
+                for (const i in state.foodLeft) {
+                    drawDot(state.foodLeft[i].x, state.foodLeft[i].y);
+                }
+
+                for (const i in state.cherriesLeft) {
+                    drawCherry(state.cherriesLeft[i].x, state.cherriesLeft[i].y);
+                }
+
+                if (state.hourCherries > 0) {
+                    for (let i = 0; i < state.hourCherries; i++) {
+                        if (i < 12) {
+                            drawCherry((i * 2.25) + 1, 1);
+                        } else {
+                            drawCherry(((i-12) * 2.25) + 1, 34.5);
+                        }
+                    }
+                }
+
+                drawPacMan(state.pacMan.x, state.pacMan.y, state.pacMan.facing);
+            }
+
+            const timeBetweenFrames = 1000 / 8; // 8 fps
+            let lastRender = 0;
+
+            function renderLoop(timestamp) {
+                const renderElapsed = timestamp - lastRender;
+
+                if (renderElapsed > timeBetweenFrames) {
+                    draw();
+                    lastRender = timestamp;
+                }
+                
+                window.requestAnimationFrame(renderLoop);
+            }
+
+            window.requestAnimationFrame(renderLoop);
+        } else {
+            alert('Canvas not supported by this browser');
+        }
+    </script>
+</body>
+</html>
